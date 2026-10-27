@@ -166,6 +166,7 @@ interface EssayRepository {
 
 - 无网络请求；渲染进程不能读任意文件。
 - HTML 仅在本地 TipTap 编辑器内产生和渲染。粘贴内容由 ProseMirror schema 约束；v1 未开放原始 HTML 粘贴或链接，减少 XSS 面。
+- 从数据库读出的 HTML 在进入编辑器前再经过 `infra/security/sanitize.ts` 的 DOMPurify 白名单（`p`、`br`、`b`、`strong`、`i`、`em`、`u`，无属性），避免历史数据或手工修改数据库引入脚本、图片和事件属性；有对应单元测试。
 - 导出路径只能来自原生保存对话框；Rust 命令只负责写这一条路径。
 - 数据库无加密；这是本地个人写作工具的取舍。若未来存敏感内容，可评估 SQLCipher。
 
