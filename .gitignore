@@ -4,6 +4,7 @@ src-tauri/target/
 src-tauri/gen/
 playwright-report/
 test-results/
+artifacts/
 .DS_Store
 *.log
 .env
