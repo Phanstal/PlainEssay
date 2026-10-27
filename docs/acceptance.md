@@ -14,11 +14,12 @@
 
 - `npm run lint`：通过
 - `npm run typecheck`：通过
-- `npm test`：16 个单元测试通过
+- `npm test`：19 个单元测试通过
 - `npm run build`：通过
 - `npm run test:e2e`：4 个 Playwright 用例通过（Edge/Chromium，1440×900 与 390×844）
 - `cargo test --manifest-path src-tauri/Cargo.toml`：1 个测试通过
 - `cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings`：通过
+- `npx tauri build --no-bundle`：Windows release 构建通过，并通过 WebView2 CDP 驱动真实 Tauri 窗口完成 SQLite 新建、自动保存、列表回读验证
 - macOS 实机构建：由 GitHub Actions `macos-15` 完成，结果见 Actions 与 Release 页面
 
 > 自动化的 Playwright 验证的是浏览器 localStorage 适配器；SQLite、原生菜单、窗口和 DMG 仍需按下面的真机步骤验收。

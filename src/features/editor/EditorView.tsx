@@ -4,6 +4,7 @@ import StarterKit from '@tiptap/starter-kit';
 import { countWords, previewLabel, type Essay } from '../../domain/essay';
 import type { EssayRepository } from '../../domain/repository';
 import { exportEssayAsDocx, exportEssayAsMarkdown } from '../../infra/export/exportEssay';
+import { sanitizeEssayHtml } from '../../infra/security/sanitize';
 import { subscribeEditorCommands } from '../../platform/commands';
 
 interface EditorViewProps {
@@ -84,6 +85,7 @@ export function EditorView({ repository, essayId, onBack }: EditorViewProps) {
 }
 
 function EssayEditor({ repository, initial, onBack }: EssayEditorProps) {
+  const sanitizedHtml = sanitizeEssayHtml(initial.contentHtml);
   const [title, setTitle] = useState(initial.title);
   const [wordCount, setWordCount] = useState(initial.wordCount);
   const [saveState, setSaveState] = useState<SaveState>('saved');
@@ -92,7 +94,7 @@ function EssayEditor({ repository, initial, onBack }: EssayEditorProps) {
 
   const latestRef = useRef({
     title: initial.title,
-    html: initial.contentHtml,
+    html: sanitizedHtml,
     text: initial.plainText,
     wordCount: initial.wordCount,
   });
@@ -172,7 +174,7 @@ function EssayEditor({ repository, initial, onBack }: EssayEditorProps) {
         link: false,
       }),
     ],
-    content: initial.contentHtml || '<p></p>',
+    content: sanitizedHtml || '<p></p>',
     editorProps: {
       attributes: {
         class: 'essay-body',
