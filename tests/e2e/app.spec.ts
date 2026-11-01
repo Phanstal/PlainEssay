@@ -9,9 +9,9 @@ test.beforeEach(async ({ page }) => {
 
 test('creates an essay, autosaves, survives reload, and exports both formats', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Essays' })).toBeVisible();
-  await expect(page.getByText('No essays yet')).toBeVisible();
+  await expect(page.getByText('Start a new essay')).toBeVisible();
 
-  await page.getByRole('button', { name: /New essay/i }).click();
+  await page.getByRole('button', { name: 'New essay', exact: true }).click();
   await expect(page.getByLabel('Essay title')).toBeVisible();
 
   await page.getByLabel('Essay title').fill('A Quiet Morning');
@@ -63,7 +63,7 @@ test('creates an essay, autosaves, survives reload, and exports both formats', a
 });
 
 test('uses the Untitled Essay fallback for a blank title', async ({ page }) => {
-  await page.getByRole('button', { name: /New essay/i }).click();
+  await page.getByRole('button', { name: 'New essay', exact: true }).click();
   await page.locator('.essay-body').click();
   await page.keyboard.type('A few words without a title.');
   await expect(page.locator('.save-status')).toHaveText('Saved');
@@ -75,7 +75,7 @@ test('uses the Untitled Essay fallback for a blank title', async ({ page }) => {
 });
 
 test('deletes an essay from the row menu after confirmation', async ({ page }) => {
-  await page.getByRole('button', { name: /New essay/i }).click();
+  await page.getByRole('button', { name: 'New essay', exact: true }).click();
   await page.getByLabel('Essay title').fill('Temporary thought');
   await page.getByRole('button', { name: 'Back to essays' }).click();
   await expect(page.locator('.document-row')).toHaveCount(1);
@@ -87,13 +87,69 @@ test('deletes an essay from the row menu after confirmation', async ({ page }) =
   await page.getByRole('button', { name: 'Delete', exact: true }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Delete', exact: true }).click();
 
-  await expect(page.getByText('No essays yet')).toBeVisible();
+  await expect(page.getByText('Start a new essay')).toBeVisible();
   await expect(page.locator('.document-row')).toHaveCount(0);
+});
+
+test('finds, replaces, reports selected words, and undoes changes', async ({ page }) => {
+  await page.getByRole('button', { name: 'New essay', exact: true }).click();
+  await page.locator('.essay-body').click();
+  await page.keyboard.type('alpha beta alpha');
+  await expect(page.locator('.word-count')).toHaveText('3 words');
+
+  await page.keyboard.press('Control+f');
+  await expect(page.getByRole('search', { name: 'Find and replace' })).toBeVisible();
+  await page.getByLabel('Find text').fill('alpha');
+  await expect(page.locator('.find-bar span')).toHaveText('1 of 2');
+
+  await page.keyboard.press('Enter');
+  await expect(page.locator('.word-count')).toHaveText('1 selected');
+
+  await page.getByLabel('Replacement text').fill('omega');
+  await page.getByRole('button', { name: 'Replace', exact: true }).click();
+  await expect(page.locator('.essay-body')).toContainText('omega beta alpha');
+
+  await page.getByRole('button', { name: 'All', exact: true }).click();
+  await expect(page.locator('.essay-body')).toContainText('omega beta omega');
+
+  await page.getByRole('button', { name: 'Close find' }).click();
+  await expect(page.getByRole('search')).toHaveCount(0);
+
+  await page.getByRole('button', { name: 'Undo' }).click();
+  await expect(page.locator('.essay-body')).toContainText('omega beta alpha');
+});
+
+test('pastes a local image and keeps it after reload', async ({ page }) => {
+  const tinyPng =
+    'iVBORw0KGgoAAAANSUhEUgAAAAIAAAADCAYAAAC56t6BAAAAEUlEQVR42mNk+M9Qz8DAwMAAAA0AAf8B9YQAAAAASUVORK5CYII=';
+
+  await page.getByRole('button', { name: 'New essay', exact: true }).click();
+  await page.locator('.essay-body').click();
+  await page.evaluate((base64) => {
+    const binary = atob(base64);
+    const bytes = Uint8Array.from(binary, (character) => character.charCodeAt(0));
+    const file = new File([bytes], 'dot.png', { type: 'image/png' });
+    const data = new DataTransfer();
+    data.items.add(file);
+    const event = new ClipboardEvent('paste', {
+      clipboardData: data,
+      bubbles: true,
+      cancelable: true,
+    });
+    document.querySelector('.essay-body')?.dispatchEvent(event);
+  }, tinyPng);
+
+  await expect(page.locator('.essay-body img')).toHaveCount(1);
+  await expect(page.locator('.save-status')).toHaveText('Saved');
+
+  await page.reload();
+  await page.locator('.document-row').click();
+  await expect(page.locator('.essay-body img')).toHaveCount(1);
 });
 
 test('keeps the mobile layout usable', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.getByRole('button', { name: /New essay/i }).click();
+  await page.getByRole('button', { name: 'New essay', exact: true }).click();
   await page.getByLabel('Essay title').fill('Small screen');
   await page.locator('.essay-body').click();
   await page.keyboard.type('Writing on a phone works too.');

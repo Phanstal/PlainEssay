@@ -12,14 +12,14 @@ Built with Tauri 2, React, TypeScript, TipTap, and SQLite. No accounts, no cloud
 
 Download the latest universal build for macOS 12 or newer (Apple Silicon and Intel) from [Releases](https://github.com/Phanstal/PlainEssay/releases/latest):
 
-- `PlainEssay_0.1.0_universal.dmg`
-- `PlainEssay_0.1.0_universal.zip`
+- `PlainEssay_0.1.2_universal.dmg`
+- `PlainEssay_0.1.2_universal.zip`
 - `SHA256SUMS.txt`
 
 Verify the download before opening it:
 
 ```sh
-shasum -a 256 -c PlainEssay_0.1.0_universal.dmg.sha256
+shasum -a 256 -c PlainEssay_0.1.2_universal.dmg.sha256
 ```
 
 ### First launch
@@ -39,11 +39,13 @@ Because every build is ad-hoc signed rather than notarized, you may need to repe
 ## What it does
 
 - **Library**: every essay sorted by last edit, word count, and a friendly “Today, 2:07 AM” timestamp.
-- **Writing page**: title, body, and a small floating Bold / Italic / Underline toolbar. No sidebars, counters, or formatting panels in your way.
+- **Writing page**: title, body, and a small floating Undo / Redo / Bold / Italic / Underline toolbar. The word count switches to `N selected` while text is selected.
+- **Find and replace**: `⌘F` (or `Edit → Find…`) opens the quiet find bar; Enter / Shift+Enter moves through matches, with Replace and Replace all.
+- **Local images**: paste or drop PNG, JPEG, GIF, or WebP images. They are stored as data URLs inside the essay and never uploaded; drag-over shows a drop outline.
 - **Autosave**: changes save to a local SQLite database after a short debounce, with a visible `Saving…` / `Saved` state.
-- **Markdown export**: valid CommonMark. Bold, italic, headings, and paragraphs are converted by Turndown; underline is kept as `<u>` because CommonMark has no underline syntax.
-- **Word export**: a `.docx` with a centered title, Times New Roman 12 pt, double line spacing, one-inch margins, and inline bold / italic / underline preserved.
-- **Native macOS shell**: overlay title bar, real application menus (`File`, `Edit`, `Format`, `View`, `Window`), `⌘N`, `⌘S`, `⌘B`, `⌘I`, `⌘U`, and window state restoration.
+- **Markdown export**: valid CommonMark. Bold, italic, and paragraphs are converted by Turndown; underline is kept as `<u>` because CommonMark has no underline syntax; local images become Markdown image links.
+- **Word export**: a `.docx` with a centered title, Times New Roman 12 pt, double line spacing, one-inch margins, inline bold / italic / underline preserved, and local images embedded as Word media.
+- **Native macOS shell**: overlay title bar, real application menus (`File`, `Edit`, `Format`, `View`, `Window`), `⌘N`, `⌘S`, `⌘F`, `⌘B`, `⌘I`, `⌘U`, and window state restoration.
 - **Delete**: right-click an essay row, or use the `⋯` button, then confirm.
 - **Local only**: the database never leaves the Mac.
 
@@ -57,7 +59,7 @@ The SQLite database lives at:
 
 Back it up with Time Machine or by copying that file while PlainEssay is closed. Removing the app does not remove the database; delete the folder above if you want a clean slate.
 
-Word counts use whitespace-separated tokens for Latin text and count CJK characters individually, so Chinese and Japanese writing gets a useful count instead of “1 word”.
+Word counts use whitespace-separated tokens for Latin text and count CJK characters individually, so Chinese and Japanese writing gets a useful count instead of “1 word”. Images are embedded in the HTML as base64 data URLs, so essays with many large images produce a larger database; a single image is capped at 12 MB when inserted.
 
 ## Development
 
@@ -80,10 +82,10 @@ Checks:
 ```sh
 npm run lint
 npm run typecheck
-npm test             # Vitest: domain, storage, Markdown and DOCX
+npm test             # Vitest: domain, storage, images, security, Markdown and DOCX
 npm run build
 npx playwright install chromium
-npm run test:e2e     # builds first; starts `npm run preview`
+npm run test:e2e     # serves the fresh `dist/` through `npm run preview`
 cargo test --manifest-path src-tauri/Cargo.toml
 cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings
 ```
@@ -99,7 +101,7 @@ The CI workflow runs lint, typecheck, unit tests, production build, and Playwrig
 
 ## Releasing
 
-Push a tag such as `v0.1.0`. [`.github/workflows/macos.yml`](.github/workflows/macos.yml) builds a universal `.app` on `macos-15`, ad-hoc signs it, creates the DMG and ZIP, writes SHA-256 checksums, and publishes a GitHub Release. There is no Apple signing identity or notarization in this project, so the Gatekeeper instructions above apply to every release.
+Push a tag such as `v0.1.2`. [`.github/workflows/macos.yml`](.github/workflows/macos.yml) builds a universal `.app` on `macos-15`, ad-hoc signs it, creates the DMG and ZIP, writes SHA-256 checksums, and publishes a GitHub Release. There is no Apple signing identity or notarization in this project, so the Gatekeeper instructions above apply to every release.
 
 ## Architecture
 
@@ -110,6 +112,7 @@ React views (library, editor)
         ├── infra/storage: EssayRepository
         │     ├── SQLite adapter (Tauri desktop)
         │     └── localStorage adapter (browser + E2E)
+        ├── infra/images: local image validation and data URLs
         ├── infra/export: Markdown (Turndown) and DOCX (docx)
         └── platform: Tauri detection, native menu command bus, save dialog
         │
@@ -126,7 +129,7 @@ The target was a Mac app that can later become an iPhone or Android app. Tauri 2
 
 ## Privacy
 
-PlainEssay has no network code, no analytics, no account system, and no synchronization. The only file writes outside its own database are exports you explicitly choose in a save dialog.
+PlainEssay has no network code, no analytics, no account system, and no synchronization. Pasted images stay in the local database as data URLs; the app never uploads them. The only file writes outside its own database are exports you explicitly choose in a save dialog.
 
 ## Design
 

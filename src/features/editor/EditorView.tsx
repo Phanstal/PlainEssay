@@ -1,11 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { EditorContent, useEditor } from '@tiptap/react';
+import { EditorContent, useEditor, type Editor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
+import ImageExtension from '@tiptap/extension-image';
+import { TextSelection } from '@tiptap/pm/state';
 import { countWords, previewLabel, type Essay } from '../../domain/essay';
 import type { EssayRepository } from '../../domain/repository';
 import { exportEssayAsDocx, exportEssayAsMarkdown } from '../../infra/export/exportEssay';
+import { imageFilesFromDataTransfer, readImageFile } from '../../infra/images/readImageFile';
 import { sanitizeEssayHtml } from '../../infra/security/sanitize';
 import { subscribeEditorCommands } from '../../platform/commands';
+import { FindBar } from './FindBar';
 
 interface EditorViewProps {
   repository: EssayRepository;
@@ -91,6 +95,12 @@ function EssayEditor({ repository, initial, onBack }: EssayEditorProps) {
   const [saveState, setSaveState] = useState<SaveState>('saved');
   const [toast, setToast] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
+  const [findOpen, setFindOpen] = useState(false);
+  const [selectionCount, setSelectionCount] = useState(0);
+  const [historyState, setHistoryState] = useState({ canUndo: false, canRedo: false });
+  const [dragActive, setDragActive] = useState(false);
+  const editorRef = useRef<Editor | null>(null);
+  const insertImageFilesRef = useRef<(files: File[]) => void>(() => undefined);
 
   const latestRef = useRef({
     title: initial.title,
@@ -173,6 +183,11 @@ function EssayEditor({ repository, initial, onBack }: EssayEditorProps) {
         strike: false,
         link: false,
       }),
+      ImageExtension.configure({
+        inline: false,
+        allowBase64: true,
+        HTMLAttributes: { class: 'essay-image' },
+      }),
     ],
     content: sanitizedHtml || '<p></p>',
     editorProps: {
@@ -182,6 +197,34 @@ function EssayEditor({ repository, initial, onBack }: EssayEditorProps) {
         role: 'textbox',
         'aria-multiline': 'true',
         'aria-label': 'Essay body',
+      },
+      handlePaste: (_view, event) => {
+        const files = imageFilesFromDataTransfer(event.clipboardData);
+        if (files.length === 0) {
+          return false;
+        }
+        event.preventDefault();
+        insertImageFilesRef.current(files);
+        return true;
+      },
+      handleDrop: (view, event, _slice, moved) => {
+        if (moved) {
+          return false;
+        }
+        const files = imageFilesFromDataTransfer(event.dataTransfer);
+        if (files.length === 0) {
+          return false;
+        }
+        event.preventDefault();
+        setDragActive(false);
+        const coordinates = view.posAtCoords({ left: event.clientX, top: event.clientY });
+        if (coordinates) {
+          view.dispatch(
+            view.state.tr.setSelection(TextSelection.near(view.state.doc.resolve(coordinates.pos))),
+          );
+        }
+        insertImageFilesRef.current(files);
+        return true;
       },
     },
     onUpdate: ({ editor: current }) => {
@@ -199,6 +242,29 @@ function EssayEditor({ repository, initial, onBack }: EssayEditorProps) {
     },
   });
 
+  const insertImageFiles = useCallback(
+    async (files: File[]) => {
+      for (const file of files) {
+        try {
+          const image = await readImageFile(file);
+          editorRef.current?.chain().focus().setImage(image).run();
+          showToast('Image added');
+        } catch (error) {
+          showToast(error instanceof Error ? error.message : 'Image could not be added');
+        }
+      }
+    },
+    [showToast],
+  );
+
+  useEffect(() => {
+    editorRef.current = editor;
+  }, [editor]);
+
+  useEffect(() => {
+    insertImageFilesRef.current = (files) => void insertImageFiles(files);
+  }, [insertImageFiles]);
+
   const [activeFormats, setActiveFormats] = useState({
     bold: false,
     italic: false,
@@ -215,6 +281,12 @@ function EssayEditor({ repository, initial, onBack }: EssayEditorProps) {
         italic: editor.isActive('italic'),
         underline: editor.isActive('underline'),
       });
+      setHistoryState({
+        canUndo: editor.can().undo(),
+        canRedo: editor.can().redo(),
+      });
+      const { from, to } = editor.state.selection;
+      setSelectionCount(from === to ? 0 : countWords(editor.state.doc.textBetween(from, to, ' ')));
     };
     editor.on('selectionUpdate', update);
     editor.on('transaction', update);
@@ -241,6 +313,14 @@ function EssayEditor({ repository, initial, onBack }: EssayEditorProps) {
     },
     [editor],
   );
+
+  const undo = useCallback(() => {
+    editor?.chain().focus().undo().run();
+  }, [editor]);
+
+  const redo = useCallback(() => {
+    editor?.chain().focus().redo().run();
+  }, [editor]);
 
   const handleTitleChange = useCallback(
     (value: string) => {
@@ -290,6 +370,9 @@ function EssayEditor({ repository, initial, onBack }: EssayEditorProps) {
           break;
         case 'underline':
           applyFormat('underline');
+          break;
+        case 'show-find':
+          setFindOpen(true);
           break;
         case 'save':
           void saveNow();
@@ -349,7 +432,9 @@ function EssayEditor({ repository, initial, onBack }: EssayEditorProps) {
         </div>
 
         <div className="toolbar-actions">
-          <span className="word-count">{previewLabel(wordCount)}</span>
+          <span className="word-count">
+            {selectionCount > 0 ? `${selectionCount} selected` : previewLabel(wordCount)}
+          </span>
           <button
             type="button"
             className="secondary-export"
@@ -369,6 +454,16 @@ function EssayEditor({ repository, initial, onBack }: EssayEditorProps) {
         </div>
       </header>
 
+      {findOpen ? (
+        <FindBar
+          editor={editor}
+          onClose={() => {
+            setFindOpen(false);
+            editor?.commands.focus();
+          }}
+        />
+      ) : null}
+
       <div className="writing-stage">
         <div className="paper">
           <input
@@ -376,12 +471,33 @@ function EssayEditor({ repository, initial, onBack }: EssayEditorProps) {
             aria-label="Essay title"
             placeholder="Untitled Essay"
             value={title}
+            maxLength={160}
             onChange={(event) => handleTitleChange(event.target.value)}
             spellCheck={false}
           />
           <div className="title-rule" aria-hidden="true" />
 
           <div className="formatting-toolbar" role="toolbar" aria-label="Formatting">
+            <button
+              type="button"
+              className="format-button"
+              aria-label="Undo"
+              disabled={!historyState.canUndo}
+              onMouseDown={(event) => event.preventDefault()}
+              onClick={undo}
+            >
+              ↶
+            </button>
+            <button
+              type="button"
+              className="format-button"
+              aria-label="Redo"
+              disabled={!historyState.canRedo}
+              onMouseDown={(event) => event.preventDefault()}
+              onClick={redo}
+            >
+              ↷
+            </button>
             <button
               type="button"
               className={`format-button ${activeFormats.bold ? 'active' : ''}`}
@@ -414,7 +530,28 @@ function EssayEditor({ repository, initial, onBack }: EssayEditorProps) {
             </button>
           </div>
 
-          <EditorContent editor={editor} className="essay-body-wrap" />
+          <div
+            className={`essay-body-wrap ${dragActive ? 'image-drop-active' : ''}`}
+            onDragEnter={(event) => {
+              if (event.dataTransfer?.types.includes('Files')) {
+                event.preventDefault();
+                setDragActive(true);
+              }
+            }}
+            onDragOver={(event) => {
+              if (event.dataTransfer?.types.includes('Files')) {
+                event.preventDefault();
+              }
+            }}
+            onDragLeave={(event) => {
+              if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+                setDragActive(false);
+              }
+            }}
+            onDrop={() => setDragActive(false)}
+          >
+            <EditorContent editor={editor} className="essay-body-content" />
+          </div>
         </div>
       </div>
 

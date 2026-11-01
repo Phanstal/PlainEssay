@@ -20,6 +20,16 @@ describe('sanitizeEssayHtml', () => {
     expect(sanitized).not.toContain('onerror');
   });
 
+  it('keeps local image data but strips remote image sources', () => {
+    const tinyPng =
+      'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAADCAYAAAC56t6BAAAAEUlEQVR42mNk+M9Qz8DAwMAAAA0AAf8B9YQAAAAASUVORK5CYII=';
+    expect(sanitizeEssayHtml(`<p>One</p><img src="${tinyPng}" alt="chart">`)).toBe(
+      `<p>One</p><img src="${tinyPng}" alt="chart">`,
+    );
+    expect(sanitizeEssayHtml('<img src="https://example.com/tracker.png">')).toBe('');
+    expect(sanitizeEssayHtml('<img src="data:image/svg+xml;base64,PHN2Zz4=">')).toBe('');
+  });
+
   it('returns an empty string for empty input', () => {
     expect(sanitizeEssayHtml('')).toBe('');
   });

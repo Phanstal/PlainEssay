@@ -43,8 +43,10 @@ pub fn install<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()> {
     let copy = PredefinedMenuItem::copy(app, Some("Copy"))?;
     let paste = PredefinedMenuItem::paste(app, Some("Paste"))?;
     let select_all = PredefinedMenuItem::select_all(app, Some("Select All"))?;
+    let find = MenuItem::with_id(app, "show-find", "Find…", true, Some("CmdOrCtrl+F"))?;
     let edit_separator_one = PredefinedMenuItem::separator(app)?;
     let edit_separator_two = PredefinedMenuItem::separator(app)?;
+    let edit_separator_three = PredefinedMenuItem::separator(app)?;
 
     let edit = Submenu::with_items(
         app,
@@ -59,6 +61,8 @@ pub fn install<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()> {
             &paste,
             &edit_separator_two,
             &select_all,
+            &edit_separator_three,
+            &find,
         ],
     )?;
 
@@ -118,6 +122,7 @@ pub fn install<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()> {
             "bold" => Some("bold"),
             "italic" => Some("italic"),
             "underline" => Some("underline"),
+            "show-find" => Some("show-find"),
             _ => None,
         };
 

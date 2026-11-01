@@ -15,6 +15,19 @@ turndown.addRule('underline', {
   replacement: (content) => (content ? `<u>${content}</u>` : ''),
 });
 
+turndown.addRule('localImage', {
+  filter: 'img',
+  replacement: (_content, node) => {
+    const element = node as HTMLImageElement;
+    const src = element.getAttribute('src') ?? '';
+    if (!src.startsWith('data:image/')) {
+      return '';
+    }
+    const alt = (element.getAttribute('alt') ?? '').replace(/[[\]]/g, '');
+    return `![${alt}](${src})`;
+  },
+});
+
 export function essayToMarkdown(title: string, contentHtml: string): string {
   const heading = displayTitle(title).replace(/\s+/g, ' ');
   const body = turndown.turndown(contentHtml || '').trim();

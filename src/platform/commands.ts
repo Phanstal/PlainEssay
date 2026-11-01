@@ -8,6 +8,7 @@ export type AppCommand =
   | 'bold'
   | 'italic'
   | 'underline'
+  | 'show-find'
   | 'back';
 
 export type EditorCommand = Exclude<AppCommand, 'new-essay'>;
@@ -52,6 +53,9 @@ export function subscribeAppCommands(handler: (command: AppCommand) => void): ()
     } else if (event.key.toLowerCase() === 's' && !event.shiftKey) {
       event.preventDefault();
       handler('save');
+    } else if (event.key.toLowerCase() === 'f' && !event.shiftKey) {
+      event.preventDefault();
+      handler('show-find');
     } else if (event.key.toLowerCase() === 'm' && event.shiftKey) {
       event.preventDefault();
       handler('export-markdown');

@@ -30,6 +30,17 @@ describe('docx export', () => {
     expect(xml).toContain('w:val="single"');
   });
 
+  it('embeds local images as Word media', async () => {
+    const tinyPng =
+      'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAADCAYAAAC56t6BAAAAEUlEQVR42mNk+M9Qz8DAwMAAAA0AAf8B9YQAAAAASUVORK5CYII=';
+    const blob = await essayToDocxBlob('Image', `<p>Before</p><img src="${tinyPng}" alt="chart">`);
+    const zip = await JSZip.loadAsync(await blob.arrayBuffer());
+    const media = Object.keys(zip.files).filter((name) => name.startsWith('word/media/'));
+    expect(media.length).toBeGreaterThan(0);
+    const xml = await zip.file('word/document.xml')!.async('string');
+    expect(xml).toContain('<w:drawing>');
+  });
+
   it('uses the untitled fallback and preserves paragraph breaks', async () => {
     const xml = await documentXml('  ', '<p>First paragraph.</p><p>Second paragraph.</p>');
 

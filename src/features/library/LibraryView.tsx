@@ -133,8 +133,8 @@ export function LibraryView({
             <span className="empty-plus" aria-hidden="true">
               ＋
             </span>
-            <strong>No essays yet</strong>
-            <span>Start with a quiet page.</span>
+            <strong>Start a new essay</strong>
+            <span>A quiet page is ready when you are.</span>
           </button>
         ) : (
           <div className="document-list">

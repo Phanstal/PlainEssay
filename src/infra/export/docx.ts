@@ -1,9 +1,12 @@
-import { AlignmentType, Document, Packer, Paragraph, TextRun, UnderlineType } from 'docx';
+import { AlignmentType, Document, ImageRun, Packer, Paragraph, TextRun, UnderlineType } from 'docx';
 import { displayTitle } from '../../domain/essay';
+import { fitImageWithin, parseImageDataUrl } from './image';
 
 const FONT = 'Times New Roman';
 const FONT_SIZE = 24; // half-points, i.e. 12pt
 const DOUBLE_SPACING = { after: 0, line: 480 };
+const MAX_IMAGE_WIDTH = 600;
+const MAX_IMAGE_HEIGHT = 700;
 
 interface InlineStyle {
   bold?: boolean;
@@ -65,7 +68,31 @@ function parseBlocks(contentHtml: string): Array<Node> {
   return [];
 }
 
-function paragraphForBlock(node: Node): Paragraph | null {
+function imageParagraph(element: HTMLElement): Paragraph | null {
+  const image = parseImageDataUrl(element.getAttribute('src') ?? '');
+  if (!image || !image.type) {
+    return null;
+  }
+  const transformation = fitImageWithin(
+    image.width,
+    image.height,
+    MAX_IMAGE_WIDTH,
+    MAX_IMAGE_HEIGHT,
+  );
+  return new Paragraph({
+    alignment: AlignmentType.LEFT,
+    spacing: DOUBLE_SPACING,
+    children: [
+      new ImageRun({
+        data: image.bytes,
+        type: image.type,
+        transformation,
+      }),
+    ],
+  });
+}
+
+async function paragraphForBlock(node: Node): Promise<Paragraph | null> {
   if (node.nodeType === Node.TEXT_NODE) {
     const text = node.textContent ?? '';
     if (text.trim().length === 0) {
@@ -92,6 +119,15 @@ function paragraphForBlock(node: Node): Paragraph | null {
     });
   }
 
+  if (tag === 'img') {
+    return imageParagraph(element);
+  }
+
+  const images = element.querySelectorAll('img');
+  if (images.length > 0) {
+    return imageParagraph(images[0] as HTMLElement);
+  }
+
   const runs = Array.from(element.childNodes).flatMap((child) => runsForNode(child, {}));
   return new Paragraph({
     alignment: AlignmentType.LEFT,
@@ -114,9 +150,9 @@ export async function essayToDocxBlob(title: string, contentHtml: string): Promi
     ],
   });
 
-  const bodyParagraphs = parseBlocks(contentHtml)
-    .map(paragraphForBlock)
-    .filter((paragraph): paragraph is Paragraph => paragraph !== null);
+  const bodyParagraphs = (
+    await Promise.all(parseBlocks(contentHtml).map(paragraphForBlock))
+  ).filter((paragraph): paragraph is Paragraph => paragraph !== null);
 
   const document = new Document({
     creator: 'PlainEssay',

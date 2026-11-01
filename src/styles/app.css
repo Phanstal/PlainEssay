@@ -97,6 +97,7 @@ button:disabled {
 }
 
 .home-nav {
+  -webkit-app-region: drag;
   min-height: calc(4rem + env(safe-area-inset-top));
   padding: env(safe-area-inset-top) clamp(1.5rem, 4vw, 4rem) 0;
   -webkit-backdrop-filter: blur(24px);
@@ -109,6 +110,7 @@ button:disabled {
 }
 
 .new-button {
+  -webkit-app-region: no-drag;
   color: #fff;
   background: var(--primary-strong);
   cursor: pointer;
@@ -449,6 +451,7 @@ button:disabled {
 }
 
 .toolbar {
+  -webkit-app-region: drag;
   min-height: calc(4rem + env(safe-area-inset-top));
   padding: env(safe-area-inset-top) 2rem 0;
   -webkit-backdrop-filter: blur(24px) saturate(120%);
@@ -465,6 +468,7 @@ button:disabled {
 
 .brand-lockup,
 .toolbar-actions {
+  -webkit-app-region: no-drag;
   align-items: center;
   display: flex;
 }
@@ -687,6 +691,16 @@ button:disabled {
   background: var(--secondary);
 }
 
+.format-button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.format-button:disabled:hover {
+  color: #68747a;
+  background: transparent;
+}
+
 .format-italic {
   font-style: italic;
 }
@@ -733,6 +747,83 @@ button:disabled {
 
 .essay-body u {
   text-underline-offset: 0.14em;
+}
+
+.essay-body img {
+  border-radius: 0.7rem;
+  max-width: 100%;
+  height: auto;
+  margin: 1.5rem auto;
+  display: block;
+}
+
+.essay-body-wrap.image-drop-active {
+  outline: 2px dashed var(--primary-strong);
+  outline-offset: 0.75rem;
+  background: #ddf1f63d;
+  border-radius: 0.8rem;
+}
+
+.find-bar {
+  top: calc(4rem + env(safe-area-inset-top));
+  z-index: 10;
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
+  -webkit-app-region: no-drag;
+  background: #fcfcfaf5;
+  border: 1px solid #dde4e7d1;
+  border-radius: 0.85rem;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.45rem;
+  display: flex;
+  position: fixed;
+  right: 1.5rem;
+  box-shadow: 0 0.9rem 2.5rem #30383d1f;
+}
+
+.find-bar input {
+  border: 1px solid var(--neutral-mid);
+  width: 9.5rem;
+  height: 2rem;
+  color: var(--neutral-dark);
+  background: #fff;
+  border-radius: 0.5rem;
+  outline: none;
+  padding: 0 0.65rem;
+  font-size: 0.72rem;
+}
+
+.find-bar input:focus {
+  border-color: var(--primary-strong);
+  box-shadow: 0 0 0 2px #a8d7f55c;
+}
+
+.find-bar button {
+  color: #59666c;
+  background: var(--neutral-light);
+  cursor: pointer;
+  border-radius: 0.5rem;
+  height: 2rem;
+  padding: 0 0.55rem;
+  font-size: 0.7rem;
+}
+
+.find-bar button:hover {
+  color: var(--primary-strong);
+  background: var(--secondary);
+}
+
+.find-bar button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.find-bar span {
+  color: #899399;
+  text-align: center;
+  min-width: 3.5rem;
+  font-size: 0.64rem;
 }
 
 .toast {
@@ -864,6 +955,16 @@ html.tauri .essay-title {
     flex-direction: row;
     inset: auto auto calc(1.25rem + env(safe-area-inset-bottom)) 50%;
     transform: translateX(-50%);
+  }
+
+  .find-bar {
+    left: 0.65rem;
+    right: 0.65rem;
+    overflow-x: auto;
+  }
+
+  .find-bar input {
+    min-width: 7rem;
   }
 
   .brand-lockup {

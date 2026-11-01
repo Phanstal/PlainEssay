@@ -6,7 +6,7 @@ PlainEssay 是一个单窗口、本地优先的 macOS 写作应用：
 
 - 一个安静的文档库和一个专注的编辑页；
 - 数据只存在本机，无账号、无云同步、无遥测；
-- 支持导出 `.md` 与 `.docx`；
+- 支持查找替换、撤销重做、本地图片，以及导出 `.md` 与 `.docx`；
 - 首版以**未签名、未公证**的 `.app` / `.dmg` 形式个人分发；
 - 当前在 Windows 上开发，通过 GitHub Actions 的 macOS runner 产出和验证 macOS 构建，最终由用户在真机验收；
 - 保留迁移到 iOS / Android 的可能，不把业务逻辑绑死在 macOS 或桌面壳上。
@@ -29,6 +29,7 @@ PlainEssay 是一个单窗口、本地优先的 macOS 写作应用：
                 │
 ┌───────────────▼──────────────────────────────┐
 │ infra/storage        SQLite / localStorage     │
+│ infra/images         本地图片校验 / data URL   │
 │ infra/export         Markdown / DOCX            │
 │ platform/tauri       运行环境判断、命令总线     │
 │ platform/commands    原生菜单 → 前端命令        │
@@ -63,6 +64,7 @@ CREATE INDEX idx_essays_updated_at ON essays(updated_at DESC);
 ```
 
 - 正文以 TipTap 产生的 HTML 保存，同时冗余 `plain_text` 与 `word_count`，让文档库列表不必解析 HTML。
+- 图片节点保存为 `<img src="data:image/...;base64,...">`，直接进入 `content_html`；没有远程 URL，也没有独立图片表。代价是含大图的文档会增大数据库与保存负载，因此插入时限制单图 12 MB。
 - 标题为空时 UI 显示 `Untitled Essay`，但数据库保留空字符串，避免“标题是否被用户改过”的歧义。
 - 列表只按 `updated_at DESC` 排序。
 - 字数：拉丁文本按空白分隔的 token 计数，CJK 字符按字计数（例如“你好世界”为 4）。原型只按空格切分，中文会得到 1，这里是有意修正。
@@ -101,7 +103,10 @@ interface EssayRepository {
 
 ## 5. 编辑与自动保存
 
-- 编辑器使用 TipTap 3（ProseMirror），只启用段落、Bold、Italic、Underline；关闭列表、标题、引用、代码块、链接等与 v1 定位不符的节点。
+- 编辑器使用 TipTap 3（ProseMirror），启用段落、Bold、Italic、Underline、Image 与 StarterKit 的 history；关闭列表、标题、引用、代码块、链接等与 v1 定位不符的节点。
+- 图片只接受 PNG / JPEG / GIF / WebP，通过 `FileReader` 转成 data URL 后插入；粘贴和拖放共用 `handlePaste` / `handleDrop`，拖放会先把选区移动到投放点。没有上传服务，也没有网络请求。
+- 查找替换（`features/editor/FindBar.tsx`）在 ProseMirror 文本节点内统计匹配位置，使用 `setTextSelection` 跳转、`insertContentAt` 替换；`⌘F` 由原生菜单和浏览器快捷键共同映射为 `show-find` 命令。
+- Undo / Redo 直接使用 StarterKit 的 history 命令；选中字数从 `state.selection` 的 `textBetween` 重新计数，不修改文档冗余字数。
 - 标题是受控 `<input>`；正文是 contenteditable。二者任一变化都会：
   1. 更新 `latestRef`（标题、HTML、纯文本、字数）；
   2. 置 `dirty`；
@@ -120,6 +125,7 @@ interface EssayRepository {
 - 标题输出 `# Title`；
 - 正文中的 `<strong>` / `<em>` 输出 `**` / `*`；
 - `<u>` 输出内联 `<u>`（CommonMark 没有下划线语法，丢标记会损失语义）；
+- 本地图片输出 `![alt](data:image/...)`，远程图片地址会被丢弃；
 - 原型里粗体导出会得到 `**First line with **style** and more.**` 的错误 Markdown；本实现通过 Turndown 的规则正确生成 `First line with **style** and more.`，不复制该缺陷。
 
 ### Word
@@ -130,6 +136,7 @@ interface EssayRepository {
 - 正文左对齐，`w:line=480`（双倍行距），段后 0；
 - 页边距四边 1440 twips（1 英寸）；
 - 正文的 `<strong>` / `<em>` / `<u>` 分别映射为 `w:b` / `w:i` / `w:u`；`<br>` 映射为换行；
+- 本地图片解码 data URL，读取 PNG/JPEG/GIF 原始尺寸，按正文最大 600×700 px 等比缩放后用 `ImageRun` 嵌入；WebP 没有对应的 OOXML 类型，导出时跳过；
 - 导出文件名由标题清洗非法字符后生成，空标题使用 `Untitled Essay`。
 
 ### 落盘
@@ -142,8 +149,8 @@ interface EssayRepository {
 - 单窗口 1180×820，最小 720×560，`titleBarStyle: Overlay` + `hiddenTitle`。
 - 插件：`dialog`、`sql`（sqlite feature）、`window-state`；窗口状态自动保存与恢复。
 - 权限（`capabilities/default.json`）：`core:default`、`dialog:default`、`sql:default`、`sql:allow-execute`。注意 `sql:default` 只含读取、加载、关闭，不含写操作，必须显式加 `allow-execute`。
-- macOS 菜单：`PlainEssay`、`File`、`Edit`、`Format`、`View`、`Window`。菜单项通过 `app.emit("plainessay://command", "...")` 发到前端；前端 `subscribeAppCommands` 统一处理 `new-essay` / `save` / `export-*` / `format-*` / `back`。
-- 浏览器模式没有原生菜单，改为等价的键盘快捷键（`⌘/Ctrl+N`、`⌘/Ctrl+S`、`⌘/Ctrl+Shift+M`、`⌘/Ctrl+Shift+D`）；B/I/U 由 TipTap 自己的键盘映射处理。
+- macOS 菜单：`PlainEssay`、`File`、`Edit`、`Format`、`View`、`Window`。菜单项通过 `app.emit("plainessay://command", "...")` 发到前端；前端 `subscribeAppCommands` 统一处理 `new-essay` / `save` / `export-*` / `format-*` / `show-find` / `back`。
+- 浏览器模式没有原生菜单，改为等价的键盘快捷键（`⌘/Ctrl+N`、`⌘/Ctrl+S`、`⌘/Ctrl+F`、`⌘/Ctrl+Shift+M`、`⌘/Ctrl+Shift+D`）；B/I/U 与撤销/重做由 TipTap 自己的键盘映射处理。
 - macOS 上给 header 增加 `5.25rem` 左内边距，避开红绿灯；header 设置 `data-tauri-drag-region` 以支持拖动窗口。
 - CSP 只允许 self、Tauri IPC、本地 WebSocket（开发 HMR）；没有远程字体或外链脚本。
 
@@ -166,31 +173,35 @@ interface EssayRepository {
 
 - 无网络请求；渲染进程不能读任意文件。
 - HTML 仅在本地 TipTap 编辑器内产生和渲染。粘贴内容由 ProseMirror schema 约束；v1 未开放原始 HTML 粘贴或链接，减少 XSS 面。
-- 从数据库读出的 HTML 在进入编辑器前再经过 `infra/security/sanitize.ts` 的 DOMPurify 白名单（`p`、`br`、`b`、`strong`、`i`、`em`、`u`，无属性），避免历史数据或手工修改数据库引入脚本、图片和事件属性；有对应单元测试。
+- 从数据库读出的 HTML 在进入编辑器前再经过 `infra/security/sanitize.ts` 的 DOMPurify 白名单（`p`、`br`、`b`、`strong`、`i`、`em`、`u`、`img`；属性仅 `src`、`alt`、`title`）。`img.src` 必须是 `data:image/(png|jpeg|jpg|gif|webp);base64,...`，远程 URL、SVG data URL、事件属性都会被移除；有对应单元测试。
+- 图片不上传：`readImageFile` 只做本地类型/大小校验与 data URL 转换，CSP 也没有远程连接白名单。
 - 导出路径只能来自原生保存对话框；Rust 命令只负责写这一条路径。
 - 数据库无加密；这是本地个人写作工具的取舍。若未来存敏感内容，可评估 SQLCipher。
 
 ## 10. 测试与 CI
 
-| 层          | 工具           | 覆盖                                                                                           |
-| ----------- | -------------- | ---------------------------------------------------------------------------------------------- |
-| domain 单元 | Vitest         | 字数、时间格式、空标题、文件名清洗                                                             |
-| 存储        | Vitest + jsdom | localStorage 适配器的增删改查与持久化                                                          |
-| 导出        | Vitest         | Markdown 的粗体/斜体/下划线、原型 bug 回归；DOCX 的 OOXML 字体、行距、页边距、粗体/斜体/下划线 |
-| UI E2E      | Playwright     | 新建、自动保存、刷新持久化、Markdown/Word 下载、空标题、删除、移动布局                         |
-| Rust        | `cargo test`   | `save_export` 解码与写文件                                                                     |
-| 构建        | CI             | Ubuntu 前端全链路 + macOS 原生构建/发布                                                        |
+| 层          | 工具           | 覆盖                                                                                                             |
+| ----------- | -------------- | ---------------------------------------------------------------------------------------------------------------- |
+| domain 单元 | Vitest         | 字数、时间格式、空标题、文件名清洗                                                                               |
+| 存储        | Vitest + jsdom | localStorage 适配器的增删改查与持久化                                                                            |
+| 图片        | Vitest         | data URL 解码、PNG/JPEG/GIF 尺寸、缩放；图片导出的 Markdown/DOCX 媒体                                            |
+| 安全        | Vitest         | 本地 data URL 图片保留，远程 URL、SVG、事件属性移除                                                              |
+| 导出        | Vitest         | Markdown 的粗体/斜体/下划线、原型 bug 回归；DOCX 的 OOXML 字体、行距、页边距、粗体/斜体/下划线                   |
+| UI E2E      | Playwright     | 新建、自动保存、刷新持久化、Markdown/Word 下载、空标题、删除、查找替换、撤销、选中字数、图片粘贴持久化、移动布局 |
+| Rust        | `cargo test`   | `save_export` 解码与写文件                                                                                       |
+| 构建        | CI             | Ubuntu 前端全链路 + macOS 原生构建/发布                                                                          |
 
 CI 没有 Mac 真机调试能力，原生窗口的最终视觉与交互需要按 `docs/acceptance.md` 在真机验收。
 
 ## 11. 关键决策记录
 
-| 决策                                | 取舍                                                         |
-| ----------------------------------- | ------------------------------------------------------------ |
-| Tauri 2 而不是 SwiftUI              | 一套前端可延伸到移动端；牺牲原生控件与部分 macOS 细节        |
-| TipTap 而不是 Slate/Lexical         | 与原型 contenteditable 行为接近，扩展成本低，文档成熟        |
-| SQLite 而不是 JSON 文件             | 事务、排序、后续迁移更稳；代价是需要 Rust 插件               |
-| 同时保留 localStorage 适配器        | 浏览器开发/E2E 无需启动原生壳；接口与 SQLite 一致            |
-| 用 Turndown 而不是手写 HTML→MD      | 正确处理嵌套强调，避免原型里的 Markdown 破损                 |
-| 用 `docx` 构造 OOXML 而不是模板替换 | 结构可控，测试可直接解压校验                                 |
-| 首版不签名、不公证                  | 个人分发成本最低；用户需手动绕过 Gatekeeper，README 已写清楚 |
+| 决策                                | 取舍                                                               |
+| ----------------------------------- | ------------------------------------------------------------------ |
+| Tauri 2 而不是 SwiftUI              | 一套前端可延伸到移动端；牺牲原生控件与部分 macOS 细节              |
+| TipTap 而不是 Slate/Lexical         | 与原型 contenteditable 行为接近，扩展成本低，文档成熟              |
+| SQLite 而不是 JSON 文件             | 事务、排序、后续迁移更稳；代价是需要 Rust 插件                     |
+| 同时保留 localStorage 适配器        | 浏览器开发/E2E 无需启动原生壳；接口与 SQLite 一致                  |
+| 用 Turndown 而不是手写 HTML→MD      | 正确处理嵌套强调，避免原型里的 Markdown 破损                       |
+| 用 `docx` 构造 OOXML 而不是模板替换 | 结构可控，测试可直接解压校验                                       |
+| 图片存 data URL 而不是本地文件引用  | 无额外文件生命周期、无丢失路径风险；代价是数据库变大，单图限 12 MB |
+| 首版不签名、不公证                  | 个人分发成本最低；用户需手动绕过 Gatekeeper，README 已写清楚       |
