@@ -1,12 +1,12 @@
-# PlainEssay 验收清单（v0.1.3）
+# PlainEssay 验收清单（v0.1.4）
 
 ## 0. 构建信息
 
 | 项目 | 值                                                                    |
 | ---- | --------------------------------------------------------------------- |
-| 版本 | v0.1.3                                                                |
+| 版本 | v0.1.4                                                                |
 | 平台 | macOS 12+，universal（arm64 + x86_64）                                |
-| 产物 | `PlainEssay_0.1.3_universal.dmg`、`.zip`、`.sha256`、`SHA256SUMS.txt` |
+| 产物 | `PlainEssay_0.1.4_universal.dmg`、`.zip`、`.sha256`、`SHA256SUMS.txt` |
 | 签名 | ad-hoc（未使用 Apple Developer ID，未公证）                           |
 | 仓库 | https://github.com/Phanstal/PlainEssay                                |
 
@@ -16,20 +16,19 @@
 - `npm run typecheck`：通过
 - `npm test`：26 个单元测试通过
 - `npm run build`：通过
-- `npm run test:e2e`：7 个 Playwright 用例通过（1440×900 与 390×844；覆盖查找替换、撤销、选中字数、图片粘贴持久化、deep 拖动区域）
+- `npm run test:e2e`：6 个 Playwright 用例通过（1440×900 与 390×844；覆盖查找替换、撤销、选中字数、图片粘贴持久化）
 - `cargo test --manifest-path src-tauri/Cargo.toml`：1 个测试通过
 - `cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings`：通过
 - `npx tauri build --no-bundle`：Windows release 构建通过；SQLite 原生窗口行为沿用 v0.1.0 的 WebView2 CDP 验证步骤
-- v0.1.3 CI（run `41318150639`）：前端 lint / typecheck / 26 个单测 / build / 7 个 E2E，Rust fmt / clippy / test 全部通过
-- v0.1.3 macOS 构建（run `41318166575`）：universal `.app` 编译、ad-hoc 签名、DMG/ZIP/checksum 打包与 GitHub Release 发布全部通过
-- 产物复核：DMG SHA-256 `2fe7526b…`、ZIP SHA-256 `33c53920…`，与 `SHA256SUMS.txt` 一致；`CFBundleShortVersionString=0.1.3`、`LSMinimumSystemVersion=12.0`，Mach-O fat binary 含 `x86_64`（`0x01000007`）与 `arm64`（`0x0100000C`）
+- v0.1.3 CI（run `41318150639`）与 macOS 构建（run `41318166575`）已验证通过；但 v0.1.3 的 deep 拖动方案在 macOS 激活窗口下仍不生效
+- v0.1.4 改用原生透明标题栏，只改窗口配置与文档；以本次 `v0.1.4` tag 的 CI 与 macOS Release 运行结果为准
 
 > 自动化的 Playwright 验证的是浏览器 localStorage 适配器；SQLite、原生菜单、窗口和 DMG 仍需按下面的真机步骤验收。
 
 ## 1. 下载与安装
 
-- [ ] 从 Releases 下载 `PlainEssay_0.1.3_universal.dmg`、`.zip` 与 `SHA256SUMS.txt`。
-- [ ] 校验：`shasum -a 256 -c PlainEssay_0.1.3_universal.dmg.sha256`，结果为 `OK`。
+- [ ] 从 Releases 下载 `PlainEssay_0.1.4_universal.dmg`、`.zip` 与 `SHA256SUMS.txt`。
+- [ ] 校验：`shasum -a 256 -c PlainEssay_0.1.4_universal.dmg.sha256`，结果为 `OK`。
 - [ ] 打开 DMG，把 `PlainEssay.app` 拖入 `/Applications`。
 - [ ] 首次启动：右键 → 打开 → 打开；或在“系统设置 → 隐私与安全性”里选择“仍要打开”。
 - [ ] 若提示“已损坏”，执行 `xattr -dr com.apple.quarantine /Applications/PlainEssay.app` 后重开。
@@ -104,12 +103,12 @@
 - [ ] `Format → Bold / Italic / Underline` 对当前选区生效。
 - [ ] `Edit` 菜单的撤销、重做、剪切、复制、粘贴、全选可用；`Edit → Find…`（`⌘F`）打开查找条。
 - [ ] `View → Toggle Full Screen` 可用；全屏下顶部安全区不遮挡工具条。
-- [ ] 窗口拖动、最小化、关闭正常；重新打开后窗口尺寸与位置恢复。
-- [ ] 红绿灯不遮挡返回按钮或字标（overlay titlebar 左内边距 5.25rem）。
-- [ ] 文档库：按住标题栏任意非按钮区域（空白、`plainessay` 字标附近）可拖动窗口。
-- [ ] 编辑页：按住字标、保存状态、工具条空白处或标题栏空白处均可拖动窗口；此前这些子元素铺满 header，裸 `data-tauri-drag-region` 不生效。
-- [ ] 返回按钮、导出按钮、新建按钮、查找输入框与正文编辑区不触发窗口拖动，仍可正常点击/输入。
-- [ ] 双击标题栏空白处可最大化/还原窗口（macOS 允许在轻微移动后取消双击）。
+- [ ] 窗口置前时，按住顶部原生标题栏拖动，窗口立即移动；不需要先点击一次激活。
+- [ ] 窗口未置前时，第一次点击原生标题栏即可激活并拖动，行为与普通 macOS 窗口一致。
+- [ ] 文档库和编辑页的页面 header 都位于原生标题栏下方，红绿灯不遮挡字标、返回按钮或导出按钮。
+- [ ] 页面内按钮、输入框、查找条和正文编辑区不触发窗口拖动，点击/输入正常。
+- [ ] 双击原生标题栏可最大化/还原窗口。
+- [ ] 窗口最小化、关闭正常；重新打开后窗口尺寸与位置恢复。
 
 ## 7. 移动布局（为 iOS/Android 预留）
 
@@ -130,7 +129,7 @@
 - [ ] 连续输入 10 分钟、频繁切换文档、插入多张图片无崩溃、无明显卡顿。
 - [ ] 大量文档（至少 100 篇）时文档库滚动与打开仍流畅。
 
-## 9. 已知限制（v0.1.3 接受）
+## 9. 已知限制（v0.1.4 接受）
 
 - 无 Apple 签名/公证，首次启动需要手动放行；每次新版本可能重复。
 - 无自动更新。
@@ -143,6 +142,7 @@
 - 窗口关闭时最多丢失最后约 600 ms 的输入（返回/`⌘S` 会 flush）。
 - 无数据库加密。
 - 只有英文界面；时间格式为 en-US。
+- macOS 使用原生透明标题栏而非 Overlay，顶部比 v0.1.2 多一条原生标题栏；这是规避 Tauri #15623 的取舍。
 
 ## 10. 验收结论
 

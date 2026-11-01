@@ -146,12 +146,13 @@ interface EssayRepository {
 
 ## 7. 原生壳（Tauri 2）
 
-- 单窗口 1180×820，最小 720×560，`titleBarStyle: Overlay` + `hiddenTitle`。
+- 单窗口 1180×820，最小 720×560，`titleBarStyle: "Transparent"` + `hiddenTitle`，窗口背景 `#fcfcfa`。
 - 插件：`dialog`、`sql`（sqlite feature）、`window-state`；窗口状态自动保存与恢复。
 - 权限（`capabilities/default.json`）：`core:default`、`dialog:default`、`sql:default`、`sql:allow-execute`。注意 `sql:default` 只含读取、加载、关闭，不含写操作，必须显式加 `allow-execute`。
 - macOS 菜单：`PlainEssay`、`File`、`Edit`、`Format`、`View`、`Window`。菜单项通过 `app.emit("plainessay://command", "...")` 发到前端；前端 `subscribeAppCommands` 统一处理 `new-essay` / `save` / `export-*` / `format-*` / `show-find` / `back`。
 - 浏览器模式没有原生菜单，改为等价的键盘快捷键（`⌘/Ctrl+N`、`⌘/Ctrl+S`、`⌘/Ctrl+F`、`⌘/Ctrl+Shift+M`、`⌘/Ctrl+Shift+D`）；B/I/U 与撤销/重做由 TipTap 自己的键盘映射处理。
-- macOS 上给 header 增加 `5.25rem` 左内边距，避开红绿灯；header 设置 `data-tauri-drag-region="deep"` 以支持从子元素区域拖动窗口。Tauri 对裸 `data-tauri-drag-region` 只识别直接点中 header 本身，编辑页 header 又被字标、保存状态和操作区铺满，因此必须用 `deep`。Tauri 会沿事件路径识别按钮、输入框、`tabindex` 元素等可点击控件并阻止其触发拖动，无需再写 `-webkit-app-region`。
+- macOS 使用原生透明标题栏（不是 Overlay）：网页内容从标题栏下方开始，拖动由 AppKit 原生标题栏处理，窗口激活与否行为一致。`Overlay` 会让 `WKWebView` 覆盖标题栏，窗口已激活时点击进入 WebView，Tauri 的 `start_dragging` 无法可靠启动原生拖动（[tauri#15623](https://github.com/tauri-apps/tauri/issues/15623)）；因此不使用页面 `data-tauri-drag-region`、`-webkit-app-region` 或红绿灯左内边距。
+- 窗口背景色与纸张一致，透明标题栏不会露出突兀的系统底色。
 - CSP 只允许 self、Tauri IPC、本地 WebSocket（开发 HMR）；没有远程字体或外链脚本。
 
 ## 8. 平台移植（iOS / Android）

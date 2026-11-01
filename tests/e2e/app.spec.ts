@@ -147,12 +147,6 @@ test('pastes a local image and keeps it after reload', async ({ page }) => {
   await expect(page.locator('.essay-body img')).toHaveCount(1);
 });
 
-test('marks both title bars as deep Tauri drag regions', async ({ page }) => {
-  await expect(page.locator('.home-nav')).toHaveAttribute('data-tauri-drag-region', 'deep');
-  await page.getByRole('button', { name: 'New essay', exact: true }).click();
-  await expect(page.locator('.toolbar')).toHaveAttribute('data-tauri-drag-region', 'deep');
-});
-
 test('keeps the mobile layout usable', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.getByRole('button', { name: 'New essay', exact: true }).click();

@@ -101,7 +101,7 @@ export function LibraryView({
 
   return (
     <div className="home-shell">
-      <header className="home-nav" data-tauri-drag-region="deep">
+      <header className="home-nav">
         <span className="wordmark">plainessay</span>
         <button
           type="button"

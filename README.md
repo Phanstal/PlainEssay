@@ -12,14 +12,14 @@ Built with Tauri 2, React, TypeScript, TipTap, and SQLite. No accounts, no cloud
 
 Download the latest universal build for macOS 12 or newer (Apple Silicon and Intel) from [Releases](https://github.com/Phanstal/PlainEssay/releases/latest):
 
-- `PlainEssay_0.1.3_universal.dmg`
-- `PlainEssay_0.1.3_universal.zip`
+- `PlainEssay_0.1.4_universal.dmg`
+- `PlainEssay_0.1.4_universal.zip`
 - `SHA256SUMS.txt`
 
 Verify the download before opening it:
 
 ```sh
-shasum -a 256 -c PlainEssay_0.1.3_universal.dmg.sha256
+shasum -a 256 -c PlainEssay_0.1.4_universal.dmg.sha256
 ```
 
 ### First launch
@@ -45,7 +45,7 @@ Because every build is ad-hoc signed rather than notarized, you may need to repe
 - **Autosave**: changes save to a local SQLite database after a short debounce, with a visible `Saving…` / `Saved` state.
 - **Markdown export**: valid CommonMark. Bold, italic, and paragraphs are converted by Turndown; underline is kept as `<u>` because CommonMark has no underline syntax; local images become Markdown image links.
 - **Word export**: a `.docx` with a centered title, Times New Roman 12 pt, double line spacing, one-inch margins, inline bold / italic / underline preserved, and local images embedded as Word media.
-- **Native macOS shell**: overlay title bar, real application menus (`File`, `Edit`, `Format`, `View`, `Window`), `⌘N`, `⌘S`, `⌘F`, `⌘B`, `⌘I`, `⌘U`, and window state restoration.
+- **Native macOS shell**: transparent native title bar with reliable window dragging, real application menus (`File`, `Edit`, `Format`, `View`, `Window`), `⌘N`, `⌘S`, `⌘F`, `⌘B`, `⌘I`, `⌘U`, and window state restoration.
 - **Delete**: right-click an essay row, or use the `⋯` button, then confirm.
 - **Local only**: the database never leaves the Mac.
 
@@ -101,7 +101,7 @@ The CI workflow runs lint, typecheck, unit tests, production build, and Playwrig
 
 ## Releasing
 
-Push a tag such as `v0.1.3`. [`.github/workflows/macos.yml`](.github/workflows/macos.yml) builds a universal `.app` on `macos-15`, ad-hoc signs it, creates the DMG and ZIP, writes SHA-256 checksums, and publishes a GitHub Release. There is no Apple signing identity or notarization in this project, so the Gatekeeper instructions above apply to every release.
+Push a tag such as `v0.1.4`. [`.github/workflows/macos.yml`](.github/workflows/macos.yml) builds a universal `.app` on `macos-15`, ad-hoc signs it, creates the DMG and ZIP, writes SHA-256 checksums, and publishes a GitHub Release. There is no Apple signing identity or notarization in this project, so the Gatekeeper instructions above apply to every release.
 
 ## Architecture
 

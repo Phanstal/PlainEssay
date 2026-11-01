@@ -861,16 +861,6 @@ button:disabled {
   display: grid;
 }
 
-/* ---------- macOS overlay title bar ---------- */
-
-html.tauri-macos .home-nav {
-  padding-left: max(5.25rem, clamp(1.5rem, 4vw, 4rem));
-}
-
-html.tauri-macos .toolbar {
-  padding-left: max(5.25rem, 2rem);
-}
-
 html.tauri .home-nav,
 html.tauri .toolbar {
   -webkit-user-select: none;

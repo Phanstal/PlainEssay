@@ -414,7 +414,7 @@ function EssayEditor({ repository, initial, onBack }: EssayEditorProps) {
 
   return (
     <div className="app-shell">
-      <header className="toolbar" data-tauri-drag-region="deep">
+      <header className="toolbar">
         <div className="brand-lockup">
           <button
             type="button"
