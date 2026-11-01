@@ -8,21 +8,21 @@
 
 ## 本目录文件
 
-| 文件                           | 用途                                                          |
-| ------------------------------ | ------------------------------------------------------------- |
-| `prototype.css`                | 原型完整样式（17,184 bytes），含设计 token、桌面与 760px 断点 |
+| 文件                           | 用途                                                                 |
+| ------------------------------ | -------------------------------------------------------------------- |
+| `prototype.css`                | 原型完整样式（17,184 bytes），含设计 token、桌面与 760px 断点        |
 | `prototype-v11.css`            | Version 11 完整样式（格式化后 23,341 bytes），含查找条、图片与拖动区 |
-| `reference-home.png`           | 原型文档库 1440×900 参考截图                                  |
-| `reference-editor.png`         | 原型编辑页 1440×900 参考截图                                  |
-| `reference-v11-editor.png`     | Version 11 编辑页参考（818×532，含五按钮工具条）              |
-| `reference-mobile-home.png`    | 原型文档库 390×844 参考截图                                   |
-| `reference-mobile-editor.png`  | 原型编辑页 390×844 参考截图                                   |
-| `screenshot-home.png`          | 本实现文档库 1440×900                                         |
-| `screenshot-library.png`       | 本实现有文档时的文档库 1440×900                               |
-| `screenshot-editor-empty.png`  | 本实现空编辑页 1440×900                                       |
-| `screenshot-editor-filled.png` | 本实现带格式正文的编辑页 1440×900                             |
-| `screenshot-mobile-home.png`   | 本实现文档库 390×844                                          |
-| `screenshot-mobile-editor.png` | 本实现编辑页 390×844                                          |
+| `reference-home.png`           | 原型文档库 1440×900 参考截图                                         |
+| `reference-editor.png`         | 原型编辑页 1440×900 参考截图                                         |
+| `reference-v11-editor.png`     | Version 11 编辑页参考（818×532，含五按钮工具条）                     |
+| `reference-mobile-home.png`    | 原型文档库 390×844 参考截图                                          |
+| `reference-mobile-editor.png`  | 原型编辑页 390×844 参考截图                                          |
+| `screenshot-home.png`          | 本实现文档库 1440×900                                                |
+| `screenshot-library.png`       | 本实现有文档时的文档库 1440×900                                      |
+| `screenshot-editor-empty.png`  | 本实现空编辑页 1440×900                                              |
+| `screenshot-editor-filled.png` | 本实现带格式正文的编辑页 1440×900                                    |
+| `screenshot-mobile-home.png`   | 本实现文档库 390×844                                                 |
+| `screenshot-mobile-editor.png` | 本实现编辑页 390×844                                                 |
 
 `reference-*` 是原型的视觉契约；`screenshot-*` 是当前实现的对照证据，后续 UI 改动可以替换它们。
 
