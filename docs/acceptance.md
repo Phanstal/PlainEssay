@@ -21,7 +21,9 @@
 - `cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings`：通过
 - `npx tauri build --no-bundle`：Windows release 构建通过；SQLite 原生窗口行为沿用 v0.1.0 的 WebView2 CDP 验证步骤
 - v0.1.3 CI（run `41318150639`）与 macOS 构建（run `41318166575`）已验证通过；但 v0.1.3 的 deep 拖动方案在 macOS 激活窗口下仍不生效
-- v0.1.4 改用原生透明标题栏，只改窗口配置与文档；以本次 `v0.1.4` tag 的 CI 与 macOS Release 运行结果为准
+- v0.1.4 CI（run `41320564548`）：前端 lint / typecheck / 26 个单测 / build / 6 个 E2E，Rust fmt / clippy / test 全部通过
+- v0.1.4 macOS 构建（run `41320666833`）：universal `.app` 编译、ad-hoc 签名、DMG/ZIP/checksum 打包与 GitHub Release 发布全部通过
+- 产物复核：DMG SHA-256 `9f5acde2…`、ZIP SHA-256 `493462d1…`，与 `SHA256SUMS.txt` 一致；`CFBundleShortVersionString=0.1.4`、`LSMinimumSystemVersion=12.0`，Mach-O fat binary 含 `x86_64`（`0x01000007`）与 `arm64`（`0x0100000C`）
 
 > 自动化的 Playwright 验证的是浏览器 localStorage 适配器；SQLite、原生菜单、窗口和 DMG 仍需按下面的真机步骤验收。
 
