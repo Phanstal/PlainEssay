@@ -151,7 +151,7 @@ interface EssayRepository {
 - 权限（`capabilities/default.json`）：`core:default`、`dialog:default`、`sql:default`、`sql:allow-execute`。注意 `sql:default` 只含读取、加载、关闭，不含写操作，必须显式加 `allow-execute`。
 - macOS 菜单：`PlainEssay`、`File`、`Edit`、`Format`、`View`、`Window`。菜单项通过 `app.emit("plainessay://command", "...")` 发到前端；前端 `subscribeAppCommands` 统一处理 `new-essay` / `save` / `export-*` / `format-*` / `show-find` / `back`。
 - 浏览器模式没有原生菜单，改为等价的键盘快捷键（`⌘/Ctrl+N`、`⌘/Ctrl+S`、`⌘/Ctrl+F`、`⌘/Ctrl+Shift+M`、`⌘/Ctrl+Shift+D`）；B/I/U 与撤销/重做由 TipTap 自己的键盘映射处理。
-- macOS 上给 header 增加 `5.25rem` 左内边距，避开红绿灯；header 设置 `data-tauri-drag-region` 以支持拖动窗口。
+- macOS 上给 header 增加 `5.25rem` 左内边距，避开红绿灯；header 设置 `data-tauri-drag-region="deep"` 以支持从子元素区域拖动窗口。Tauri 对裸 `data-tauri-drag-region` 只识别直接点中 header 本身，编辑页 header 又被字标、保存状态和操作区铺满，因此必须用 `deep`。Tauri 会沿事件路径识别按钮、输入框、`tabindex` 元素等可点击控件并阻止其触发拖动，无需再写 `-webkit-app-region`。
 - CSP 只允许 self、Tauri IPC、本地 WebSocket（开发 HMR）；没有远程字体或外链脚本。
 
 ## 8. 平台移植（iOS / Android）

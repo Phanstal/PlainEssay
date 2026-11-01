@@ -1,6 +1,6 @@
 [package]
 name = "plainessay"
-version = "0.1.2"
+version = "0.1.3"
 description = "A quiet space for focused essay writing."
 authors = ["Phanstal"]
 edition = "2021"

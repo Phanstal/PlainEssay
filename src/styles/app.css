@@ -97,7 +97,6 @@ button:disabled {
 }
 
 .home-nav {
-  -webkit-app-region: drag;
   min-height: calc(4rem + env(safe-area-inset-top));
   padding: env(safe-area-inset-top) clamp(1.5rem, 4vw, 4rem) 0;
   -webkit-backdrop-filter: blur(24px);
@@ -110,7 +109,6 @@ button:disabled {
 }
 
 .new-button {
-  -webkit-app-region: no-drag;
   color: #fff;
   background: var(--primary-strong);
   cursor: pointer;
@@ -451,7 +449,6 @@ button:disabled {
 }
 
 .toolbar {
-  -webkit-app-region: drag;
   min-height: calc(4rem + env(safe-area-inset-top));
   padding: env(safe-area-inset-top) 2rem 0;
   -webkit-backdrop-filter: blur(24px) saturate(120%);
@@ -468,7 +465,6 @@ button:disabled {
 
 .brand-lockup,
 .toolbar-actions {
-  -webkit-app-region: no-drag;
   align-items: center;
   display: flex;
 }
@@ -769,7 +765,6 @@ button:disabled {
   z-index: 10;
   -webkit-backdrop-filter: blur(18px);
   backdrop-filter: blur(18px);
-  -webkit-app-region: no-drag;
   background: #fcfcfaf5;
   border: 1px solid #dde4e7d1;
   border-radius: 0.85rem;
