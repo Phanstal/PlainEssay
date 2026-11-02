@@ -21,6 +21,9 @@
 - `cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings`：通过
 - `npx tauri build --no-bundle`：Windows release 构建通过；SQLite 原生窗口行为沿用 v0.1.0 的 WebView2 CDP 验证步骤
 - v0.1.5（CI run `41401452809`、macOS run `41401477679`）已验证图标与 `Plain` 字标；v0.1.6 在此基础上增加导出设置、首行缩进、引号清洗与全应用改名
+- v0.1.6 CI（run `41416517250`）：前端 lint / typecheck / 32 个单测 / build / 8 个 E2E，Rust fmt / clippy / test 全部通过
+- v0.1.6 macOS 构建（run `41416546112`）：universal `.app` 编译、ad-hoc 签名、DMG/ZIP/checksum 打包与 GitHub Release 发布全部通过
+- 产物复核：DMG SHA-256 `d5f6933b…`、ZIP SHA-256 `46266bd5…`，与 `SHA256SUMS.txt` 一致；安装包内为 `Plain.app`，`CFBundleName`/`CFBundleDisplayName=Plain`，可执行文件 `plainessay`（内部名），`CFBundleShortVersionString=0.1.6`，identifier 仍为 `com.phanstal.plainessay`；Mach-O fat binary 含 `x86_64`（`0x01000007`）与 `arm64`（`0x0100000C`）；`icon.icns` 与仓库 `src-tauri/icons/icon.icns` 的 SHA-256 一致
 - v0.1.6 图标与 v0.1.5 相同：`assets/plain-icon-1024.png`（由 `assets/plain-icon-source.webp` 转码）生成 macOS / Windows / Linux / iOS / Android 全套图标
 
 > 自动化的 Playwright 验证的是浏览器 localStorage 适配器；SQLite、原生菜单、窗口和 DMG 仍需按下面的真机步骤验收。
@@ -28,11 +31,11 @@
 ## 1. 下载与安装
 
 - [ ] 从 Releases 下载 `Plain_0.1.6_universal.dmg`、`.zip` 与 `SHA256SUMS.txt`。
-- [ ] 校验：`shasum -a 256 -c Plain_0.1.6_universal.dmg.sha256`，结果为 `OK`。
+- [ ] 校验：`shasum -a 256 -c Plain_0.1.6_universal.dmg.sha256`，结果为 `OK`；DMG SHA-256 为 `d5f6933b…`，ZIP 为 `46266bd5…`。
 - [ ] 打开 DMG，把 `Plain.app` 拖入 `/Applications`。
 - [ ] 首次启动：右键 → 打开 → 打开；或在“系统设置 → 隐私与安全性”里选择“仍要打开”。
 - [ ] 若提示“已损坏”，执行 `xattr -dr com.apple.quarantine /Applications/Plain.app` 后重开。
-- [ ] 确认应用名称为 Plain；窗口默认约 1180×820，最小 720×560。
+- [ ] 确认应用名称为 Plain；Dock、Finder、DMG 卷标与安装包名也均为 `Plain`；窗口默认约 1180×820，最小 720×560。
 - [ ] Dock、Finder 与 DMG 中显示新图标：淡蓝圆角纸面、三条蓝色横线、右上角蓝色加号，不再是旧版图标。
 - [ ] 文档库与编辑页左上角字标均为 `Plain`，字号、字重与原 `plainessay` 一致，不挤压返回按钮或操作区。
 
