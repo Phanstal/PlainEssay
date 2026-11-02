@@ -1,10 +1,17 @@
 import { AlignmentType, Document, ImageRun, Packer, Paragraph, TextRun, UnderlineType } from 'docx';
 import { displayTitle } from '../../domain/essay';
+import {
+  DEFAULT_DOCX_EXPORT_OPTIONS,
+  lineSpacingTwips,
+  paperSizeFor,
+  typefaceFor,
+  type DocxExportOptions,
+} from './exportSettings';
 import { fitImageWithin, parseImageDataUrl } from './image';
+import { smartQuotes } from './smartQuotes';
 
-const FONT = 'Times New Roman';
-const FONT_SIZE = 24; // half-points, i.e. 12pt
-const DOUBLE_SPACING = { after: 0, line: 480 };
+const FIRST_LINE_INDENT = 720; // twips, i.e. 0.5 inch
+const PAGE_MARGIN = 1440; // twips, i.e. 1 inch
 const MAX_IMAGE_WIDTH = 600;
 const MAX_IMAGE_HEIGHT = 700;
 
@@ -14,23 +21,27 @@ interface InlineStyle {
   underline?: boolean;
 }
 
-function runsForNode(node: Node, style: InlineStyle): TextRun[] {
+function paragraphSpacing(options: DocxExportOptions) {
+  return { after: 0, line: lineSpacingTwips(options.lineSpacing) };
+}
+
+function textRun(text: string, style: InlineStyle, options: DocxExportOptions): TextRun {
+  const typeface = typefaceFor(options.typeface);
+  return new TextRun({
+    text: smartQuotes(text),
+    font: typeface.font,
+    size: typeface.size,
+    color: '000000',
+    bold: style.bold || undefined,
+    italics: style.italic || undefined,
+    underline: style.underline ? { type: UnderlineType.SINGLE } : undefined,
+  });
+}
+
+function runsForNode(node: Node, style: InlineStyle, options: DocxExportOptions): TextRun[] {
   if (node.nodeType === Node.TEXT_NODE) {
     const text = node.textContent ?? '';
-    if (text.length === 0) {
-      return [];
-    }
-    return [
-      new TextRun({
-        text,
-        font: FONT,
-        size: FONT_SIZE,
-        color: '000000',
-        bold: style.bold || undefined,
-        italics: style.italic || undefined,
-        underline: style.underline ? { type: UnderlineType.SINGLE } : undefined,
-      }),
-    ];
+    return text.length === 0 ? [] : [textRun(text, style, options)];
   }
 
   if (node.nodeType !== Node.ELEMENT_NODE) {
@@ -54,7 +65,7 @@ function runsForNode(node: Node, style: InlineStyle): TextRun[] {
     nextStyle.underline = true;
   }
 
-  return Array.from(element.childNodes).flatMap((child) => runsForNode(child, nextStyle));
+  return Array.from(element.childNodes).flatMap((child) => runsForNode(child, nextStyle, options));
 }
 
 function parseBlocks(contentHtml: string): Array<Node> {
@@ -68,7 +79,7 @@ function parseBlocks(contentHtml: string): Array<Node> {
   return [];
 }
 
-function imageParagraph(element: HTMLElement): Paragraph | null {
+function imageParagraph(element: HTMLElement, options: DocxExportOptions): Paragraph | null {
   const image = parseImageDataUrl(element.getAttribute('src') ?? '');
   if (!image || !image.type) {
     return null;
@@ -81,7 +92,7 @@ function imageParagraph(element: HTMLElement): Paragraph | null {
   );
   return new Paragraph({
     alignment: AlignmentType.LEFT,
-    spacing: DOUBLE_SPACING,
+    spacing: paragraphSpacing(options),
     children: [
       new ImageRun({
         data: image.bytes,
@@ -92,17 +103,25 @@ function imageParagraph(element: HTMLElement): Paragraph | null {
   });
 }
 
-async function paragraphForBlock(node: Node): Promise<Paragraph | null> {
+function textParagraph(children: TextRun[], options: DocxExportOptions): Paragraph {
+  return new Paragraph({
+    alignment: AlignmentType.LEFT,
+    spacing: paragraphSpacing(options),
+    indent: { firstLine: FIRST_LINE_INDENT },
+    children,
+  });
+}
+
+async function paragraphForBlock(
+  node: Node,
+  options: DocxExportOptions,
+): Promise<Paragraph | null> {
   if (node.nodeType === Node.TEXT_NODE) {
     const text = node.textContent ?? '';
     if (text.trim().length === 0) {
       return null;
     }
-    return new Paragraph({
-      alignment: AlignmentType.LEFT,
-      spacing: DOUBLE_SPACING,
-      children: [new TextRun({ text, font: FONT, size: FONT_SIZE, color: '000000' })],
-    });
+    return textParagraph([textRun(text, {}, options)], options);
   }
 
   if (node.nodeType !== Node.ELEMENT_NODE) {
@@ -112,56 +131,72 @@ async function paragraphForBlock(node: Node): Promise<Paragraph | null> {
   const element = node as HTMLElement;
   const tag = element.tagName.toLowerCase();
   if (tag === 'br') {
-    return new Paragraph({
-      alignment: AlignmentType.LEFT,
-      spacing: DOUBLE_SPACING,
-      children: [new TextRun({ break: 1 })],
-    });
+    return textParagraph([new TextRun({ break: 1 })], options);
   }
 
   if (tag === 'img') {
-    return imageParagraph(element);
+    return imageParagraph(element, options);
   }
 
   const images = element.querySelectorAll('img');
   if (images.length > 0) {
-    return imageParagraph(images[0] as HTMLElement);
+    return imageParagraph(images[0] as HTMLElement, options);
   }
 
-  const runs = Array.from(element.childNodes).flatMap((child) => runsForNode(child, {}));
-  return new Paragraph({
-    alignment: AlignmentType.LEFT,
-    spacing: DOUBLE_SPACING,
-    children: runs,
-  });
+  return textParagraph(
+    Array.from(element.childNodes).flatMap((child) => runsForNode(child, {}, options)),
+    options,
+  );
 }
 
-export async function essayToDocxBlob(title: string, contentHtml: string): Promise<Blob> {
+export async function essayToDocxBlob(
+  title: string,
+  contentHtml: string,
+  options: DocxExportOptions = DEFAULT_DOCX_EXPORT_OPTIONS,
+): Promise<Blob> {
+  const typeface = typefaceFor(options.typeface);
+  const page = paperSizeFor(options.paperSize);
+  const titleText = smartQuotes(displayTitle(title).replace(/\s+/g, ' '));
+
   const titleParagraph = new Paragraph({
     alignment: AlignmentType.CENTER,
-    spacing: DOUBLE_SPACING,
+    spacing: paragraphSpacing(options),
     children: [
       new TextRun({
-        text: displayTitle(title).replace(/\s+/g, ' '),
-        font: FONT,
-        size: FONT_SIZE,
+        text: titleText,
+        font: typeface.font,
+        size: typeface.size,
         color: '000000',
       }),
     ],
   });
 
   const bodyParagraphs = (
-    await Promise.all(parseBlocks(contentHtml).map(paragraphForBlock))
+    await Promise.all(parseBlocks(contentHtml).map((node) => paragraphForBlock(node, options)))
   ).filter((paragraph): paragraph is Paragraph => paragraph !== null);
 
   const document = new Document({
-    creator: 'PlainEssay',
-    title: displayTitle(title),
+    creator: 'Plain',
+    title: titleText,
+    styles: {
+      default: {
+        document: {
+          run: { font: typeface.font, size: typeface.size, color: '000000' },
+          paragraph: { spacing: paragraphSpacing(options) },
+        },
+      },
+    },
     sections: [
       {
         properties: {
           page: {
-            margin: { top: 1440, right: 1440, bottom: 1440, left: 1440 },
+            size: { width: page.width, height: page.height },
+            margin: {
+              top: PAGE_MARGIN,
+              right: PAGE_MARGIN,
+              bottom: PAGE_MARGIN,
+              left: PAGE_MARGIN,
+            },
           },
         },
         children: [titleParagraph, ...bodyParagraphs],

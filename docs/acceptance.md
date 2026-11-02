@@ -1,41 +1,38 @@
-# PlainEssay 验收清单（v0.1.5）
+# Plain 验收清单（v0.1.6）
 
 ## 0. 构建信息
 
-| 项目 | 值                                                                    |
-| ---- | --------------------------------------------------------------------- |
-| 版本 | v0.1.5                                                                |
-| 平台 | macOS 12+，universal（arm64 + x86_64）                                |
-| 产物 | `PlainEssay_0.1.5_universal.dmg`、`.zip`、`.sha256`、`SHA256SUMS.txt` |
-| 签名 | ad-hoc（未使用 Apple Developer ID，未公证）                           |
-| 仓库 | https://github.com/Phanstal/PlainEssay                                |
+| 项目 | 值                                                               |
+| ---- | ---------------------------------------------------------------- |
+| 版本 | v0.1.6                                                           |
+| 平台 | macOS 12+，universal（arm64 + x86_64）                           |
+| 产物 | `Plain_0.1.6_universal.dmg`、`.zip`、`.sha256`、`SHA256SUMS.txt` |
+| 签名 | ad-hoc（未使用 Apple Developer ID，未公证）                      |
+| 仓库 | https://github.com/Phanstal/PlainEssay                           |
 
 自动化状态（本地开发机，2026-11-02）：
 
 - `npm run lint`：通过
 - `npm run typecheck`：通过
-- `npm test`：26 个单元测试通过
+- `npm test`：32 个单元测试通过（含导出字体/行距/纸张、首行缩进、引号清洗）
 - `npm run build`：通过
-- `npm run test:e2e`：7 个 Playwright 用例通过（1440×900 与 390×844；覆盖 `Plain` 字标、查找替换、撤销、选中字数、图片粘贴持久化）
+- `npm run test:e2e`：8 个 Playwright 用例通过（1440×900 与 390×844；覆盖 `Plain` 字标、导出设置、引号清洗、查找替换、撤销、选中字数、图片粘贴持久化）
 - `cargo test --manifest-path src-tauri/Cargo.toml`：1 个测试通过
 - `cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings`：通过
 - `npx tauri build --no-bundle`：Windows release 构建通过；SQLite 原生窗口行为沿用 v0.1.0 的 WebView2 CDP 验证步骤
-- v0.1.3 CI（run `41318150639`）与 macOS 构建（run `41318166575`）已验证通过；但 v0.1.3 的 deep 拖动方案在 macOS 激活窗口下仍不生效
-- v0.1.5 CI（run `41401452809`）：前端 lint / typecheck / 26 个单测 / build / 7 个 E2E，Rust fmt / clippy / test 全部通过
-- v0.1.5 macOS 构建（run `41401477679`）：universal `.app` 编译、ad-hoc 签名、DMG/ZIP/checksum 打包与 GitHub Release 发布全部通过
-- 产物复核：DMG SHA-256 `e942faca…`、ZIP SHA-256 `45fd09d9…`，与 `SHA256SUMS.txt` 一致；`CFBundleShortVersionString=0.1.5`、`LSMinimumSystemVersion=12.0`，`CFBundleIconFile=icon.icns` 且图标为新的蓝色纸面加号；Mach-O fat binary 含 `x86_64`（`0x01000007`）与 `arm64`（`0x0100000C`）
-- v0.1.5 图标源：`assets/plain-icon-1024.png`（由 `assets/plain-icon-source.webp` 转码），用 `npx tauri icon` 重新生成 macOS / Windows / Linux / iOS / Android 全套图标
+- v0.1.5（CI run `41401452809`、macOS run `41401477679`）已验证图标与 `Plain` 字标；v0.1.6 在此基础上增加导出设置、首行缩进、引号清洗与全应用改名
+- v0.1.6 图标与 v0.1.5 相同：`assets/plain-icon-1024.png`（由 `assets/plain-icon-source.webp` 转码）生成 macOS / Windows / Linux / iOS / Android 全套图标
 
 > 自动化的 Playwright 验证的是浏览器 localStorage 适配器；SQLite、原生菜单、窗口和 DMG 仍需按下面的真机步骤验收。
 
 ## 1. 下载与安装
 
-- [ ] 从 Releases 下载 `PlainEssay_0.1.5_universal.dmg`、`.zip` 与 `SHA256SUMS.txt`。
-- [ ] 校验：`shasum -a 256 -c PlainEssay_0.1.5_universal.dmg.sha256`，结果为 `OK`。
-- [ ] 打开 DMG，把 `PlainEssay.app` 拖入 `/Applications`。
+- [ ] 从 Releases 下载 `Plain_0.1.6_universal.dmg`、`.zip` 与 `SHA256SUMS.txt`。
+- [ ] 校验：`shasum -a 256 -c Plain_0.1.6_universal.dmg.sha256`，结果为 `OK`。
+- [ ] 打开 DMG，把 `Plain.app` 拖入 `/Applications`。
 - [ ] 首次启动：右键 → 打开 → 打开；或在“系统设置 → 隐私与安全性”里选择“仍要打开”。
-- [ ] 若提示“已损坏”，执行 `xattr -dr com.apple.quarantine /Applications/PlainEssay.app` 后重开。
-- [ ] 确认应用名称为 PlainEssay；窗口默认约 1180×820，最小 720×560。
+- [ ] 若提示“已损坏”，执行 `xattr -dr com.apple.quarantine /Applications/Plain.app` 后重开。
+- [ ] 确认应用名称为 Plain；窗口默认约 1180×820，最小 720×560。
 - [ ] Dock、Finder 与 DMG 中显示新图标：淡蓝圆角纸面、三条蓝色横线、右上角蓝色加号，不再是旧版图标。
 - [ ] 文档库与编辑页左上角字标均为 `Plain`，字号、字重与原 `plainessay` 一致，不挤压返回按钮或操作区。
 
@@ -86,22 +83,28 @@
 - [ ] 取消对话框不会报错、不会产生文件。
 - [ ] 保存后用文本编辑器打开，首行为 `# 标题`，正文与编辑器一致。
 - [ ] 粗体输出 `**text**`，斜体输出 `*text*`，下划线输出 `<u>text</u>`。
+- [ ] 正文与标题中的直引号、撇号输出为弯引号，不出现 `&quot;` 或反斜杠转义。
 - [ ] 嵌套强调的 Markdown 合法，不出现原型中的 `**First line with **style** and more.**`。
 - [ ] 图片输出为 Markdown 图片语法，data URL 与编辑器中的图片一致。
 
 ### Word
 
-- [ ] 点击 `Export .docx` 弹出保存对话框；保存后 Word / Pages 能正常打开。
-- [ ] 标题居中，正文左对齐；字体 Times New Roman 12 pt。
-- [ ] 行距为双倍（`w:line=480`），段后 0。
-- [ ] 页边距四边 1 英寸。
+- [ ] 点击 `Export .docx` 先打开 `Export document` 设置弹窗，而不是直接弹出保存对话框；`Cancel`、`×`、Esc、点击遮罩都能关闭且不产生文件。
+- [ ] 弹窗包含 `Typeface`、`Line spacing`、`Paper size` 三项；默认值分别为 `Times New Roman · 12 pt`、`Double-spaced`、`US Letter · 8.5 × 11 in`。
+- [ ] 字体可选 `Times New Roman · 12 pt` 与 `Arial · 12 pt`；行距可选 `Double-spaced` 与 `Single-spaced`；纸张可选 US Letter 与 A4。
+- [ ] 摘要始终显示 `1-inch margins · 0.5-inch first-line indent · black text`；窄屏下弹窗不溢出。
+- [ ] 保存后 Word / Pages 能正常打开；标题居中，正文左对齐，段后 0。
+- [ ] 默认：Times New Roman 12 pt、双倍行距（`w:line=480`）、US Letter（`w:pgSz w:w=12240 w:h=15840`）、四边 1 英寸页边距。
+- [ ] 切换到 Arial / Single-spaced / A4 后导出，字体为 Arial、行距为 `w:line=240`、纸张为 `w:w=11907 w:h=16839`。
+- [ ] 每个正文段落首行缩进 0.5 英寸（`w:firstLine=720`），标题不缩进，图片段落不缩进。
+- [ ] 正文中的直双引号、直单引号与撇号导出为弯引号：`"it's"` → `“it’s”`，`'single'` → `‘single’`；Markdown 导出一致。
 - [ ] 粗体、斜体、下划线保留；多段结构与编辑器一致。
 - [ ] 图片作为内嵌媒体出现，宽度不超过页面正文宽度，比例不变。
 - [ ] 空标题导出文件名为 `Untitled Essay.docx`，文档内标题同样为 `Untitled Essay`。
 
 ## 6. 原生菜单与窗口
 
-- [ ] macOS 菜单栏包含 `PlainEssay`、`File`、`Edit`、`Format`、`View`、`Window`。
+- [ ] macOS 菜单栏包含 `Plain`、`File`、`Edit`、`Format`、`View`、`Window`。
 - [ ] `File → New Essay`（`⌘N`）在任意页面新建并进入编辑页。
 - [ ] `File → Save`（`⌘S`）保存当前文档。
 - [ ] `File → Export Markdown…`（`⌘⇧M`）与 `Export Word Document…`（`⌘⇧D`）在编辑页可用。
@@ -120,6 +123,7 @@
 - [ ] 把窗口缩到 760px 以下，或使用浏览器 390×844 视口。
 - [ ] 文档库隐藏时间与箭头，`⋯` 始终可见；工具条收窄。
 - [ ] 编辑页隐藏字数与 `Export .md`，只保留 `Export .docx`。
+- [ ] 390×844 下点 `Export .docx`，设置弹窗宽度不超出屏幕，三个下拉框、摘要、`Cancel` 与 `Export .docx` 均可操作。
 - [ ] 纸张取消圆角、边框和阴影，正文边距收窄。
 - [ ] 格式工具条固定到底部居中，不被安全区遮挡；横向容纳 5 个按钮。
 - [ ] 查找条在窄屏下左右铺开，输入框与按钮可用。
@@ -134,12 +138,13 @@
 - [ ] 连续输入 10 分钟、频繁切换文档、插入多张图片无崩溃、无明显卡顿。
 - [ ] 大量文档（至少 100 篇）时文档库滚动与打开仍流畅。
 
-## 9. 已知限制（v0.1.5 接受）
+## 9. 已知限制（v0.1.6 接受）
 
 - 无 Apple 签名/公证，首次启动需要手动放行；每次新版本可能重复。
 - 无自动更新。
 - 无云同步、无账号、无多设备。
 - 仅支持段落 + 粗体/斜体/下划线 + 本地图片；不支持标题层级、列表、链接、图片缩放/裁切、alt 文本编辑。
+- Word 导出字体只提供 Times New Roman 与 Arial（均 12 pt），行距只提供双倍与单倍；纸张只提供 US Letter 与 A4，不提供自定义页边距。
 - 图片以 base64 存入 SQLite，大图或多图会显著增大数据库和自动保存负担；单图上限 12 MB。
 - Word 导出可嵌入 PNG/JPEG/GIF；WebP 可在编辑器与 Markdown 中显示，但 Word 导出会跳过该图。
 - 查找替换按单个文本节点匹配，跨粗体/斜体等格式边界的短语不会被当作一个匹配。

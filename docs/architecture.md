@@ -1,8 +1,8 @@
-# PlainEssay 架构说明
+# Plain 架构说明
 
 ## 1. 目标与约束
 
-PlainEssay 是一个单窗口、本地优先的 macOS 写作应用：
+Plain 是一个单窗口、本地优先的 macOS 写作应用：
 
 - 一个安静的文档库和一个专注的编辑页；
 - 数据只存在本机，无账号、无云同步、无遥测；
@@ -132,9 +132,11 @@ interface EssayRepository {
 
 `infra/export/docx.ts`：用 `docx` 库构造 OOXML。
 
-- 标题段落居中，Times New Roman 12 pt（`w:sz=24`）；
-- 正文左对齐，`w:line=480`（双倍行距），段后 0；
-- 页边距四边 1440 twips（1 英寸）；
+- 导出前先打开 `Export document` 设置弹窗；默认 Times New Roman 12 pt、双倍行距、US Letter，与原型一致；字体可选 Times New Roman / Arial，行距可选 Double / Single，纸张可选 US Letter / A4；
+- 标题段落居中，12 pt（`w:sz=24`），不缩进；
+- 正文左对齐，段后 0，`w:line=480`（双倍）或 `w:line=240`（单倍）；首行缩进 `w:firstLine=720`（0.5 英寸）；
+- 页边距四边 1440 twips（1 英寸）；页面尺寸 US Letter `12240×15840` 或 A4 `11907×16839` twips；
+- 正文与标题的直引号、直单引号、撇号在导出时转成弯引号，规则与原型 `cv` 一致；Markdown 导出同样处理；
 - 正文的 `<strong>` / `<em>` / `<u>` 分别映射为 `w:b` / `w:i` / `w:u`；`<br>` 映射为换行；
 - 本地图片解码 data URL，读取 PNG/JPEG/GIF 原始尺寸，按正文最大 600×700 px 等比缩放后用 `ImageRun` 嵌入；WebP 没有对应的 OOXML 类型，导出时跳过；
 - 导出文件名由标题清洗非法字符后生成，空标题使用 `Untitled Essay`。
@@ -149,7 +151,7 @@ interface EssayRepository {
 - 单窗口 1180×820，最小 720×560，`titleBarStyle: "Transparent"` + `hiddenTitle`，窗口背景 `#fcfcfa`。
 - 插件：`dialog`、`sql`（sqlite feature）、`window-state`；窗口状态自动保存与恢复。
 - 权限（`capabilities/default.json`）：`core:default`、`dialog:default`、`sql:default`、`sql:allow-execute`。注意 `sql:default` 只含读取、加载、关闭，不含写操作，必须显式加 `allow-execute`。
-- macOS 菜单：`PlainEssay`、`File`、`Edit`、`Format`、`View`、`Window`。菜单项通过 `app.emit("plainessay://command", "...")` 发到前端；前端 `subscribeAppCommands` 统一处理 `new-essay` / `save` / `export-*` / `format-*` / `show-find` / `back`。
+- macOS 菜单：`Plain`、`File`、`Edit`、`Format`、`View`、`Window`。菜单项通过 `app.emit("plainessay://command", "...")` 发到前端；前端 `subscribeAppCommands` 统一处理 `new-essay` / `save` / `export-*` / `format-*` / `show-find` / `back`。
 - 浏览器模式没有原生菜单，改为等价的键盘快捷键（`⌘/Ctrl+N`、`⌘/Ctrl+S`、`⌘/Ctrl+F`、`⌘/Ctrl+Shift+M`、`⌘/Ctrl+Shift+D`）；B/I/U 与撤销/重做由 TipTap 自己的键盘映射处理。
 - macOS 使用原生透明标题栏（不是 Overlay）：网页内容从标题栏下方开始，拖动由 AppKit 原生标题栏处理，窗口激活与否行为一致。`Overlay` 会让 `WKWebView` 覆盖标题栏，窗口已激活时点击进入 WebView，Tauri 的 `start_dragging` 无法可靠启动原生拖动（[tauri#15623](https://github.com/tauri-apps/tauri/issues/15623)）；因此不使用页面 `data-tauri-drag-region`、`-webkit-app-region` 或红绿灯左内边距。
 - 窗口背景色与纸张一致，透明标题栏不会露出突兀的系统底色。
@@ -181,16 +183,16 @@ interface EssayRepository {
 
 ## 10. 测试与 CI
 
-| 层          | 工具           | 覆盖                                                                                                             |
-| ----------- | -------------- | ---------------------------------------------------------------------------------------------------------------- |
-| domain 单元 | Vitest         | 字数、时间格式、空标题、文件名清洗                                                                               |
-| 存储        | Vitest + jsdom | localStorage 适配器的增删改查与持久化                                                                            |
-| 图片        | Vitest         | data URL 解码、PNG/JPEG/GIF 尺寸、缩放；图片导出的 Markdown/DOCX 媒体                                            |
-| 安全        | Vitest         | 本地 data URL 图片保留，远程 URL、SVG、事件属性移除                                                              |
-| 导出        | Vitest         | Markdown 的粗体/斜体/下划线、原型 bug 回归；DOCX 的 OOXML 字体、行距、页边距、粗体/斜体/下划线                   |
-| UI E2E      | Playwright     | 新建、自动保存、刷新持久化、Markdown/Word 下载、空标题、删除、查找替换、撤销、选中字数、图片粘贴持久化、移动布局 |
-| Rust        | `cargo test`   | `save_export` 解码与写文件                                                                                       |
-| 构建        | CI             | Ubuntu 前端全链路 + macOS 原生构建/发布                                                                          |
+| 层          | 工具           | 覆盖                                                                                                               |
+| ----------- | -------------- | ------------------------------------------------------------------------------------------------------------------ |
+| domain 单元 | Vitest         | 字数、时间格式、空标题、文件名清洗                                                                                 |
+| 存储        | Vitest + jsdom | localStorage 适配器的增删改查与持久化                                                                              |
+| 图片        | Vitest         | data URL 解码、PNG/JPEG/GIF 尺寸、缩放；图片导出的 Markdown/DOCX 媒体                                              |
+| 安全        | Vitest         | 本地 data URL 图片保留，远程 URL、SVG、事件属性移除                                                                |
+| 导出        | Vitest         | Markdown 的粗体/斜体/下划线、原型 bug 回归、引号清洗；DOCX 的字体/行距/纸张、首行缩进、引号、粗体/斜体/下划线      |
+| UI E2E      | Playwright     | 新建、自动保存、刷新持久化、导出设置与 Word 下载、空标题、删除、查找替换、撤销、选中字数、图片粘贴持久化、移动布局 |
+| Rust        | `cargo test`   | `save_export` 解码与写文件                                                                                         |
+| 构建        | CI             | Ubuntu 前端全链路 + macOS 原生构建/发布                                                                            |
 
 CI 没有 Mac 真机调试能力，原生窗口的最终视觉与交互需要按 `docs/acceptance.md` 在真机验收。
 

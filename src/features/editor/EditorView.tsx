@@ -6,9 +6,14 @@ import { TextSelection } from '@tiptap/pm/state';
 import { countWords, previewLabel, type Essay } from '../../domain/essay';
 import type { EssayRepository } from '../../domain/repository';
 import { exportEssayAsDocx, exportEssayAsMarkdown } from '../../infra/export/exportEssay';
+import {
+  DEFAULT_DOCX_EXPORT_OPTIONS,
+  type DocxExportOptions,
+} from '../../infra/export/exportSettings';
 import { imageFilesFromDataTransfer, readImageFile } from '../../infra/images/readImageFile';
 import { sanitizeEssayHtml } from '../../infra/security/sanitize';
 import { subscribeEditorCommands } from '../../platform/commands';
+import { ExportDialog } from './ExportDialog';
 import { FindBar } from './FindBar';
 
 interface EditorViewProps {
@@ -95,6 +100,10 @@ function EssayEditor({ repository, initial, onBack }: EssayEditorProps) {
   const [saveState, setSaveState] = useState<SaveState>('saved');
   const [toast, setToast] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
+  const [exportDialogOpen, setExportDialogOpen] = useState(false);
+  const [exportOptions, setExportOptions] = useState<DocxExportOptions>(
+    DEFAULT_DOCX_EXPORT_OPTIONS,
+  );
   const [findOpen, setFindOpen] = useState(false);
   const [selectionCount, setSelectionCount] = useState(0);
   const [historyState, setHistoryState] = useState({ canUndo: false, canRedo: false });
@@ -337,7 +346,7 @@ function EssayEditor({ repository, initial, onBack }: EssayEditorProps) {
   }, [onBack, saveNow]);
 
   const handleExport = useCallback(
-    async (format: ExportFormat) => {
+    async (format: ExportFormat, options: DocxExportOptions = exportOptions) => {
       if (exporting) {
         return;
       }
@@ -348,7 +357,7 @@ function EssayEditor({ repository, initial, onBack }: EssayEditorProps) {
         const saved =
           format === 'markdown'
             ? await exportEssayAsMarkdown(essay)
-            : await exportEssayAsDocx(essay);
+            : await exportEssayAsDocx(essay, options);
         showToast(saved ? 'Export saved' : 'Export cancelled');
       } catch {
         showToast('Export failed');
@@ -356,8 +365,23 @@ function EssayEditor({ repository, initial, onBack }: EssayEditorProps) {
         setExporting(false);
       }
     },
-    [buildEssay, exporting, saveNow, showToast],
+    [buildEssay, exportOptions, exporting, saveNow, showToast],
   );
+
+  const openDocxExport = useCallback(() => {
+    if (!exporting) {
+      setExportDialogOpen(true);
+    }
+  }, [exporting]);
+
+  const closeDocxExport = useCallback(() => {
+    setExportDialogOpen(false);
+  }, []);
+
+  const exportDocxWithSettings = useCallback(() => {
+    setExportDialogOpen(false);
+    void handleExport('docx', exportOptions);
+  }, [exportOptions, handleExport]);
 
   useEffect(() => {
     return subscribeEditorCommands((command) => {
@@ -381,14 +405,14 @@ function EssayEditor({ repository, initial, onBack }: EssayEditorProps) {
           void handleExport('markdown');
           break;
         case 'export-docx':
-          void handleExport('docx');
+          openDocxExport();
           break;
         case 'back':
           void handleBack();
           break;
       }
     });
-  }, [applyFormat, handleBack, handleExport, saveNow]);
+  }, [applyFormat, handleBack, handleExport, openDocxExport, saveNow]);
 
   useEffect(() => {
     const onBeforeUnload = () => {
@@ -446,7 +470,7 @@ function EssayEditor({ repository, initial, onBack }: EssayEditorProps) {
           <button
             type="button"
             className="export-button"
-            onClick={() => void handleExport('docx')}
+            onClick={openDocxExport}
             disabled={exporting}
           >
             Export .docx
@@ -554,6 +578,16 @@ function EssayEditor({ repository, initial, onBack }: EssayEditorProps) {
           </div>
         </div>
       </div>
+
+      {exportDialogOpen ? (
+        <ExportDialog
+          value={exportOptions}
+          busy={exporting}
+          onChange={setExportOptions}
+          onCancel={closeDocxExport}
+          onExport={exportDocxWithSettings}
+        />
+      ) : null}
 
       {toast ? (
         <div className="toast toast-visible" role="status">

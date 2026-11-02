@@ -79,18 +79,18 @@ pub fn install<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()> {
 
     #[cfg(target_os = "macos")]
     let app_menu = {
-        let about = PredefinedMenuItem::about(app, Some("About PlainEssay"), None)?;
+        let about = PredefinedMenuItem::about(app, Some("About Plain"), None)?;
         let services = PredefinedMenuItem::services(app, Some("Services"))?;
-        let hide = PredefinedMenuItem::hide(app, Some("Hide PlainEssay"))?;
+        let hide = PredefinedMenuItem::hide(app, Some("Hide Plain"))?;
         let hide_others = PredefinedMenuItem::hide_others(app, Some("Hide Others"))?;
         let show_all = PredefinedMenuItem::show_all(app, Some("Show All"))?;
-        let quit = PredefinedMenuItem::quit(app, Some("Quit PlainEssay"))?;
+        let quit = PredefinedMenuItem::quit(app, Some("Quit Plain"))?;
         let app_separator_one = PredefinedMenuItem::separator(app)?;
         let app_separator_two = PredefinedMenuItem::separator(app)?;
         let app_separator_three = PredefinedMenuItem::separator(app)?;
         Submenu::with_items(
             app,
-            "PlainEssay",
+            "Plain",
             true,
             &[
                 &about,

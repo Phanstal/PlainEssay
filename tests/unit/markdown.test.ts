@@ -33,6 +33,17 @@ describe('markdown export', () => {
     expect(markdown).toContain(`![chart](${tinyPng})`);
   });
 
+  it('cleans straight quotes and apostrophes in the heading and body', () => {
+    const markdown = essayToMarkdown(
+      'The "real" story',
+      `<p>She said, "it's fine."</p><p>'Single quotes' too.</p>`,
+    );
+
+    expect(markdown).toContain('# The “real” story');
+    expect(markdown).toContain('She said, “it’s fine.”');
+    expect(markdown).toContain('‘Single quotes’ too.');
+  });
+
   it('falls back to an untitled heading and handles empty bodies', () => {
     expect(essayToMarkdown('', '')).toBe('# Untitled Essay\n');
     expect(essayToMarkdown('Only a title', '<p></p>')).toBe('# Only a title\n');

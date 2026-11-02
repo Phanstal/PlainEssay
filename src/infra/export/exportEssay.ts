@@ -1,5 +1,6 @@
 import { filenameFor, type Essay } from '../../domain/essay';
 import { essayToDocxBlob } from './docx';
+import { DEFAULT_DOCX_EXPORT_OPTIONS, type DocxExportOptions } from './exportSettings';
 import { essayToMarkdown } from './markdown';
 import { saveFile } from './saveFile';
 
@@ -13,8 +14,11 @@ export async function exportEssayAsMarkdown(essay: Essay): Promise<boolean> {
   return result === 'saved';
 }
 
-export async function exportEssayAsDocx(essay: Essay): Promise<boolean> {
-  const blob = await essayToDocxBlob(essay.title, essay.contentHtml);
+export async function exportEssayAsDocx(
+  essay: Essay,
+  options: DocxExportOptions = DEFAULT_DOCX_EXPORT_OPTIONS,
+): Promise<boolean> {
+  const blob = await essayToDocxBlob(essay.title, essay.contentHtml, options);
   const bytes = new Uint8Array(await blob.arrayBuffer());
   const result = await saveFile({
     defaultName: filenameFor(essay.title, 'docx'),

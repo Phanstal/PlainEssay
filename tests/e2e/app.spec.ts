@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
+import JSZip from 'jszip';
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/');
@@ -40,8 +41,15 @@ test('creates an essay, autosaves, survives reload, and exports both formats', a
   expect(markdownContent).toContain('**Bold thought**');
   expect(markdownContent).toContain('*italic*');
 
-  const docxDownload = page.waitForEvent('download');
   await page.getByRole('button', { name: 'Export .docx' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Export document' });
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByLabel('Export typeface')).toHaveValue('times');
+  await expect(dialog.getByLabel('Export line spacing')).toHaveValue('double');
+  await expect(dialog.getByLabel('Export paper size')).toHaveValue('letter');
+
+  const docxDownload = page.waitForEvent('download');
+  await dialog.getByRole('button', { name: 'Export .docx' }).click();
   const docx = await docxDownload;
   expect(docx.suggestedFilename()).toBe('A Quiet Morning.docx');
   const docxPath = await docx.path();
@@ -66,6 +74,35 @@ test('uses the Plain wordmark in the library and editor', async ({ page }) => {
   await expect(page.locator('.home-nav .wordmark')).toHaveText('Plain');
   await page.getByRole('button', { name: 'New essay', exact: true }).click();
   await expect(page.locator('.toolbar .wordmark')).toHaveText('Plain');
+});
+
+test('exports docx with selected typeface, spacing, paper size, indent, and clean quotes', async ({
+  page,
+}) => {
+  await page.getByRole('button', { name: 'New essay', exact: true }).click();
+  await page.getByLabel('Essay title').fill('Quotes');
+  await page.locator('.essay-body').click();
+  await page.keyboard.type('She said, "it\'s fine."');
+
+  await page.getByRole('button', { name: 'Export .docx' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Export document' });
+  await dialog.getByLabel('Export typeface').selectOption('arial');
+  await dialog.getByLabel('Export line spacing').selectOption('single');
+  await dialog.getByLabel('Export paper size').selectOption('a4');
+
+  const downloadPromise = page.waitForEvent('download');
+  await dialog.getByRole('button', { name: 'Export .docx' }).click();
+  const download = await downloadPromise;
+  const path = await download.path();
+  expect(path).not.toBeNull();
+  const zip = await JSZip.loadAsync(await readFile(path!));
+  const xml = await zip.file('word/document.xml')!.async('string');
+
+  expect(xml).toContain('w:ascii="Arial"');
+  expect(xml).toContain('w:line="240"');
+  expect(xml).toContain('w:pgSz w:w="11907" w:h="16839"');
+  expect(xml).toContain('<w:ind w:firstLine="720"/>');
+  expect(xml).toContain('She said, “it’s fine.”');
 });
 
 test('uses the Untitled Essay fallback for a blank title', async ({ page }) => {

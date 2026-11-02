@@ -1,5 +1,6 @@
 import TurndownService from 'turndown';
 import { displayTitle } from '../../domain/essay';
+import { smartQuotes } from './smartQuotes';
 
 const turndown = new TurndownService({
   headingStyle: 'atx',
@@ -29,7 +30,7 @@ turndown.addRule('localImage', {
 });
 
 export function essayToMarkdown(title: string, contentHtml: string): string {
-  const heading = displayTitle(title).replace(/\s+/g, ' ');
-  const body = turndown.turndown(contentHtml || '').trim();
+  const heading = smartQuotes(displayTitle(title).replace(/\s+/g, ' '));
+  const body = smartQuotes(turndown.turndown(contentHtml || '').trim());
   return body.length > 0 ? `# ${heading}\n\n${body}\n` : `# ${heading}\n`;
 }

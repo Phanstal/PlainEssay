@@ -12,5 +12,5 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler![commands::save_export])
         .run(tauri::generate_context!())
-        .expect("error while running PlainEssay");
+        .expect("error while running Plain");
 }

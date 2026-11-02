@@ -47,7 +47,7 @@ jobs:
 
       - name: Ad-hoc sign the app
         run: |
-          APP="src-tauri/target/universal-apple-darwin/release/bundle/macos/PlainEssay.app"
+          APP="src-tauri/target/universal-apple-darwin/release/bundle/macos/Plain.app"
           test -d "$APP"
           xattr -cr "$APP"
           codesign --force --deep --sign - "$APP"
@@ -57,30 +57,30 @@ jobs:
         run: |
           set -euo pipefail
           VERSION="$(node -p "require('./src-tauri/tauri.conf.json').version")"
-          APP="src-tauri/target/universal-apple-darwin/release/bundle/macos/PlainEssay.app"
+          APP="src-tauri/target/universal-apple-darwin/release/bundle/macos/Plain.app"
           mkdir -p release/dmg
 
           cp -R "$APP" release/dmg/
           ln -s /Applications release/dmg/Applications
           hdiutil create \
-            -volname "PlainEssay" \
+            -volname "Plain" \
             -srcfolder release/dmg \
             -ov -format UDZO \
-            "release/PlainEssay_${VERSION}_universal.dmg"
+            "release/Plain_${VERSION}_universal.dmg"
 
           ditto -c -k --sequesterRsrc --keepParent \
-            "$APP" "release/PlainEssay_${VERSION}_universal.zip"
+            "$APP" "release/Plain_${VERSION}_universal.zip"
 
           rm -rf release/dmg
           cd release
-          shasum -a 256 PlainEssay_${VERSION}_universal.dmg > PlainEssay_${VERSION}_universal.dmg.sha256
-          shasum -a 256 PlainEssay_${VERSION}_universal.zip > PlainEssay_${VERSION}_universal.zip.sha256
-          shasum -a 256 PlainEssay_${VERSION}_universal.dmg PlainEssay_${VERSION}_universal.zip > SHA256SUMS.txt
+          shasum -a 256 Plain_${VERSION}_universal.dmg > Plain_${VERSION}_universal.dmg.sha256
+          shasum -a 256 Plain_${VERSION}_universal.zip > Plain_${VERSION}_universal.zip.sha256
+          shasum -a 256 Plain_${VERSION}_universal.dmg Plain_${VERSION}_universal.zip > SHA256SUMS.txt
           ls -la
 
       - uses: actions/upload-artifact@v4
         with:
-          name: PlainEssay-macos-universal
+          name: Plain-macos-universal
           path: release/*
           if-no-files-found: error
 
@@ -93,18 +93,18 @@ jobs:
           NOTES="docs/release-notes/${GITHUB_REF_NAME}.md"
           if [ -f "$NOTES" ]; then
             gh release create "$GITHUB_REF_NAME" \
-              release/PlainEssay_*.dmg \
-              release/PlainEssay_*.zip \
-              release/PlainEssay_*.sha256 \
+              release/Plain_*.dmg \
+              release/Plain_*.zip \
+              release/Plain_*.sha256 \
               release/SHA256SUMS.txt \
-              --title "PlainEssay $GITHUB_REF_NAME" \
+              --title "Plain $GITHUB_REF_NAME" \
               --notes-file "$NOTES"
           else
             gh release create "$GITHUB_REF_NAME" \
-              release/PlainEssay_*.dmg \
-              release/PlainEssay_*.zip \
-              release/PlainEssay_*.sha256 \
+              release/Plain_*.dmg \
+              release/Plain_*.zip \
+              release/Plain_*.sha256 \
               release/SHA256SUMS.txt \
-              --title "PlainEssay $GITHUB_REF_NAME" \
+              --title "Plain $GITHUB_REF_NAME" \
               --generate-notes
           fi

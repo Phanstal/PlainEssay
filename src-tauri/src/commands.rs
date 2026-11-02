@@ -18,7 +18,7 @@ mod tests {
     #[test]
     fn writes_decoded_export_to_the_selected_path() {
         let directory =
-            std::env::temp_dir().join(format!("plainessay-export-test-{}", std::process::id()));
+            std::env::temp_dir().join(format!("plain-export-test-{}", std::process::id()));
         std::fs::create_dir_all(&directory).expect("create temp directory");
         let path = directory.join("essay.md");
 

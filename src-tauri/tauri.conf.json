@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "PlainEssay",
-  "version": "0.1.5",
+  "productName": "Plain",
+  "version": "0.1.6",
   "identifier": "com.phanstal.plainessay",
   "build": {
     "beforeDevCommand": "npm run dev",
@@ -13,7 +13,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "PlainEssay",
+        "title": "Plain",
         "width": 1180,
         "height": 820,
         "minWidth": 720,
@@ -41,7 +41,7 @@
     ],
     "category": "Productivity",
     "shortDescription": "A quiet space for focused essay writing.",
-    "longDescription": "PlainEssay is a local-first essay writing app: a calm library, a distraction-free editor, and clean Markdown and Word exports. No accounts, no cloud, no telemetry.",
+    "longDescription": "Plain is a local-first essay writing app: a calm library, a distraction-free editor, and clean Markdown and Word exports. No accounts, no cloud, no telemetry.",
     "macOS": {
       "minimumSystemVersion": "12.0"
     }

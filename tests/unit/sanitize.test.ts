@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { sanitizeEssayHtml } from '../../src/infra/security/sanitize';
 
 describe('sanitizeEssayHtml', () => {
-  it('keeps the inline structure PlainEssay renders and exports', () => {
+  it('keeps the inline structure Plain renders and exports', () => {
     expect(
       sanitizeEssayHtml('<p>Hello <strong>world</strong> and <em>friends</em> <u>now</u>.</p>'),
     ).toBe('<p>Hello <strong>world</strong> and <em>friends</em> <u>now</u>.</p>');

@@ -3,7 +3,7 @@ import DOMPurify from 'dompurify';
 /**
  * The editor schema already constrains what can be created, but stored HTML is
  * still treated as untrusted input (older builds, hand-edited databases, future
- * imports). Keep only the inline structure PlainEssay can render and export.
+ * imports). Keep only the inline structure Plain can render and export.
  */
 const ALLOWED_TAGS = ['p', 'br', 'b', 'strong', 'i', 'em', 'u', 'img'];
 const ALLOWED_ATTR = ['src', 'alt', 'title'];
