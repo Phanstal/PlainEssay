@@ -77,7 +77,7 @@ export default function App() {
   if (initializationError) {
     return (
       <div className="app-loading">
-        <span className="wordmark">plainessay</span>
+        <span className="wordmark">Plain</span>
         <p className="app-loading-message">The local library could not be opened.</p>
         <p className="app-loading-detail">{initializationError}</p>
       </div>
@@ -87,7 +87,7 @@ export default function App() {
   if (!repository) {
     return (
       <div className="app-loading">
-        <span className="wordmark">plainessay</span>
+        <span className="wordmark">Plain</span>
         <span className="app-loading-message">Loading…</span>
       </div>
     );

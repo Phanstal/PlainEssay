@@ -55,7 +55,7 @@ export function EditorView({ repository, essayId, onBack }: EditorViewProps) {
   if (loadError) {
     return (
       <div className="app-loading">
-        <span className="wordmark">plainessay</span>
+        <span className="wordmark">Plain</span>
         <p className="app-loading-message">{loadError}</p>
         <button type="button" className="secondary-export" onClick={onBack}>
           Back to essays
@@ -67,7 +67,7 @@ export function EditorView({ repository, essayId, onBack }: EditorViewProps) {
   if (essay === undefined) {
     return (
       <div className="app-loading">
-        <span className="wordmark">plainessay</span>
+        <span className="wordmark">Plain</span>
         <span className="app-loading-message">Opening essay…</span>
       </div>
     );
@@ -76,7 +76,7 @@ export function EditorView({ repository, essayId, onBack }: EditorViewProps) {
   if (essay === null) {
     return (
       <div className="app-loading">
-        <span className="wordmark">plainessay</span>
+        <span className="wordmark">Plain</span>
         <p className="app-loading-message">This essay could not be found.</p>
         <button type="button" className="secondary-export" onClick={onBack}>
           Back to essays
@@ -424,7 +424,7 @@ function EssayEditor({ repository, initial, onBack }: EssayEditorProps) {
           >
             ←
           </button>
-          <span className="wordmark">plainessay</span>
+          <span className="wordmark">Plain</span>
           <span className={`save-status save-status-${saveState}`} aria-live="polite">
             <span className={`status-dot ${saveState}`} />
             {statusLabel}

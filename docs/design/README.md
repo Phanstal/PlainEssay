@@ -2,8 +2,8 @@
 
 ## 来源
 
-- 原型：[PlainEssay Writing App · Figma Make](https://www.figma.com/make/qn6Dlo2r2frD52bPjC1hal/PlainEssay-Writing-App?t=sN12j4c4nWGpmHpK-1)
-- 冻结时间：2026-10-27（v0.1.0）；2026-11-01 更新到 Version 11（v0.1.2）
+- 原型：[PlainEssay Writing App · Figma Make](https://www.figma.com/make/qn6Dlo2r2frD52bPjC1hal/PlainEssay-Writing-App?t=CGcbGlKxkbVO4H39-1)
+- 冻结时间：2026-10-27（v0.1.0）；2026-11-01 更新到 Version 11（v0.1.2）；2026-11-02 更新到 Version 12（v0.1.5）
 - 冻结方式：Figma Make 不支持 Figma MCP（`create_session` 返回 “This tool is not supported for Make files. Supported file types: Design, Figjam, Slides, Figspec.”），因此从公开的 `figmacachedpreview` iframe 读取实时 DOM/CSS，保存为本地参考。
 
 ## 本目录文件
@@ -15,6 +15,8 @@
 | `reference-home.png`           | 原型文档库 1440×900 参考截图                                         |
 | `reference-editor.png`         | 原型编辑页 1440×900 参考截图                                         |
 | `reference-v11-editor.png`     | Version 11 编辑页参考（818×532，含五按钮工具条）                     |
+| `reference-v12-home.png`       | Version 12 文档库参考（1440×900，左上角 `Plain`）                    |
+| `reference-v12-editor.png`     | Version 12 编辑页参考（1440×900，左上角 `Plain`）                    |
 | `reference-mobile-home.png`    | 原型文档库 390×844 参考截图                                          |
 | `reference-mobile-editor.png`  | 原型编辑页 390×844 参考截图                                          |
 | `screenshot-home.png`          | 本实现文档库 1440×900                                                |
@@ -60,6 +62,7 @@
 - 文档库：`New essay ＋` 立即创建空文档并进入编辑页；空标题显示 `Untitled Essay`；行按更新时间倒序；时间显示 `Today, 2:07 AM`；空库显示虚线卡片。
 - 编辑页：返回箭头 + 字标 + 保存状态；`Saving… → Saved`；字数；`Export .md` 与 `Export .docx`；浮动 Undo/Redo/B/I/U（五按钮）；桌面工具条在纸张左侧，移动端底部居中。
 - Version 11 新增：`⌘F` 查找替换条（Find / Replace with / 上一个 / 下一个 / Replace / All / 计数）、选中时 `${n} selected`、粘贴/拖放图片、`.image-drop-active` 虚线投放区、空状态 `Start a new essay`。
+- Version 12：左上角字标由 `plainessay` 改为 `Plain`，文档库与编辑页一致；应用图标改为淡蓝圆角纸面 + 蓝色横线 + 右上角加号。
 - 移动端：隐藏时间和 `Export .md`，只留 `Export .docx`；纸张取消边框/阴影/圆角。
 - 原型字数：`A quiet place for ideas.` = 5；`First line with **style** and more.` = 6（按空白切分）。
 - 原型 Markdown 导出缺陷：粗体正文会导出为 `**First line with **style** and more.**`；本实现不复刻。

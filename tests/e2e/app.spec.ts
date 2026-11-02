@@ -62,6 +62,12 @@ test('creates an essay, autosaves, survives reload, and exports both formats', a
   await expect(page.locator('.essay-body')).toContainText('Bold thought');
 });
 
+test('uses the Plain wordmark in the library and editor', async ({ page }) => {
+  await expect(page.locator('.home-nav .wordmark')).toHaveText('Plain');
+  await page.getByRole('button', { name: 'New essay', exact: true }).click();
+  await expect(page.locator('.toolbar .wordmark')).toHaveText('Plain');
+});
+
 test('uses the Untitled Essay fallback for a blank title', async ({ page }) => {
   await page.getByRole('button', { name: 'New essay', exact: true }).click();
   await page.locator('.essay-body').click();

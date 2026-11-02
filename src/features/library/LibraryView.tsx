@@ -102,7 +102,7 @@ export function LibraryView({
   return (
     <div className="home-shell">
       <header className="home-nav">
-        <span className="wordmark">plainessay</span>
+        <span className="wordmark">Plain</span>
         <button
           type="button"
           className="new-button"
