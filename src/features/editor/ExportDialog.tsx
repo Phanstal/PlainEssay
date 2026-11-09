@@ -1,12 +1,8 @@
 import { useEffect } from 'react';
 import {
-  LINE_SPACING_OPTIONS,
   PAPER_SIZE_OPTIONS,
-  TYPEFACE_OPTIONS,
   type DocxExportOptions,
-  type ExportLineSpacing,
   type ExportPaperSize,
-  type ExportTypeface,
 } from '../../infra/export/exportSettings';
 
 interface ExportDialogProps {
@@ -32,7 +28,7 @@ export function ExportDialog({ value, busy, onChange, onCancel, onExport }: Expo
     <div
       className="export-overlay"
       role="presentation"
-      onPointerDown={(event) => {
+      onMouseDown={(event) => {
         if (event.target === event.currentTarget) {
           onCancel();
         }
@@ -43,7 +39,6 @@ export function ExportDialog({ value, busy, onChange, onCancel, onExport }: Expo
         role="dialog"
         aria-modal="true"
         aria-labelledby="export-title"
-        aria-describedby="export-summary"
       >
         <div className="export-dialog-heading">
           <div>
@@ -63,38 +58,15 @@ export function ExportDialog({ value, busy, onChange, onCancel, onExport }: Expo
         <div className="export-fields">
           <label>
             <span>Typeface</span>
-            <select
-              aria-label="Export typeface"
-              value={value.typeface}
-              disabled={busy}
-              autoFocus
-              onChange={(event) =>
-                onChange({ ...value, typeface: event.target.value as ExportTypeface })
-              }
-            >
-              {TYPEFACE_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
+            <select aria-label="Export typeface" value="times" disabled>
+              <option value="times">Times New Roman · 12 pt</option>
             </select>
           </label>
 
           <label>
             <span>Line spacing</span>
-            <select
-              aria-label="Export line spacing"
-              value={value.lineSpacing}
-              disabled={busy}
-              onChange={(event) =>
-                onChange({ ...value, lineSpacing: event.target.value as ExportLineSpacing })
-              }
-            >
-              {LINE_SPACING_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
+            <select aria-label="Export line spacing" value="double" disabled>
+              <option value="double">Double-spaced</option>
             </select>
           </label>
 
@@ -134,7 +106,7 @@ export function ExportDialog({ value, busy, onChange, onCancel, onExport }: Expo
             onClick={onExport}
             disabled={busy}
           >
-            {busy ? 'Exporting…' : 'Export .docx'}
+            Export .docx
           </button>
         </div>
       </section>

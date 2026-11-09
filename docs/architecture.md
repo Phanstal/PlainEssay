@@ -111,9 +111,9 @@ interface EssayRepository {
   1. 更新 `latestRef`（标题、HTML、纯文本、字数）；
   2. 置 `dirty`；
   3. UI 立即显示 `Saving…`；
-  4. 重启 600 ms 防抖计时器。
+  4. 重启 700 ms 防抖计时器。
 - 防抖结束调用 `repository.save()`；成功后仅当期间没有新编辑才显示 `Saved`，失败则显示 `Save failed` 并把 dirty 保持为 true。
-- 返回文档库、`⌘S`、卸载组件、`beforeunload` 都会尝试 flush。当前窗口关闭最多可能丢失最近 600 ms 的编辑；若未来需要严格保证，应在 Rust 的 `on_window_event(CloseRequested)` 中先阻止关闭、通知前端 flush、完成后再销毁窗口。
+- 返回文档库、`⌘S`、卸载组件、`beforeunload` 都会尝试 flush。当前窗口关闭最多可能丢失最近 700 ms 的编辑；若未来需要严格保证，应在 Rust 的 `on_window_event(CloseRequested)` 中先阻止关闭、通知前端 flush、完成后再销毁窗口。
 - 导出前也会先 flush，保证导出的内容与屏幕一致。
 
 ## 6. 导出

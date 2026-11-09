@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { displayTitle, formatUpdatedAt, previewLabel, type EssaySummary } from '../../domain/essay';
 import type { EssayRepository } from '../../domain/repository';
-import { ConfirmDialog } from './ConfirmDialog';
 
 interface LibraryViewProps {
   repository: EssayRepository;
@@ -9,12 +8,6 @@ interface LibraryViewProps {
   onCreate: () => Promise<void>;
   onOpen: (id: string) => void;
   onDelete: (id: string) => Promise<void>;
-}
-
-interface RowMenu {
-  id: string;
-  x: number;
-  y: number;
 }
 
 export function LibraryView({
@@ -27,9 +20,7 @@ export function LibraryView({
   const [essays, setEssays] = useState<EssaySummary[] | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
-  const [menu, setMenu] = useState<RowMenu | null>(null);
-  const [pendingDelete, setPendingDelete] = useState<EssaySummary | null>(null);
-  const [deleting, setDeleting] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
     let alive = true;
@@ -51,21 +42,6 @@ export function LibraryView({
     };
   }, [repository, revision]);
 
-  useEffect(() => {
-    if (!menu) {
-      return;
-    }
-    const dismiss = () => setMenu(null);
-    window.addEventListener('pointerdown', dismiss);
-    window.addEventListener('keydown', dismiss);
-    window.addEventListener('resize', dismiss);
-    return () => {
-      window.removeEventListener('pointerdown', dismiss);
-      window.removeEventListener('keydown', dismiss);
-      window.removeEventListener('resize', dismiss);
-    };
-  }, [menu]);
-
   const handleCreate = useCallback(async () => {
     if (creating) {
       return;
@@ -78,50 +54,41 @@ export function LibraryView({
     }
   }, [creating, onCreate]);
 
-  const openMenuFromButton = useCallback((event: React.MouseEvent, id: string) => {
-    event.stopPropagation();
-    const rect = event.currentTarget.getBoundingClientRect();
-    setMenu({ id, x: rect.right - 8, y: rect.bottom + 6 });
-  }, []);
-
-  const confirmDelete = useCallback(async () => {
-    if (!pendingDelete) {
-      return;
-    }
-    setDeleting(true);
-    try {
-      await onDelete(pendingDelete.id);
-      setPendingDelete(null);
-    } finally {
-      setDeleting(false);
-    }
-  }, [onDelete, pendingDelete]);
-
-  const count = essays?.length ?? 0;
+  const handleDelete = useCallback(
+    async (essay: EssaySummary) => {
+      const title = displayTitle(essay.title);
+      if (!window.confirm(`Delete “${title}”? This action cannot be undone.`)) {
+        return;
+      }
+      setDeletingId(essay.id);
+      try {
+        await onDelete(essay.id);
+      } catch (error) {
+        setLoadError(error instanceof Error ? error.message : 'Could not delete essay.');
+      } finally {
+        setDeletingId(null);
+      }
+    },
+    [onDelete],
+  );
 
   return (
-    <div className="home-shell">
-      <header className="home-nav">
-        <span className="wordmark">Plain</span>
-        <button
-          type="button"
-          className="new-button"
-          onClick={() => void handleCreate()}
-          disabled={creating}
-        >
-          New essay <span aria-hidden="true">＋</span>
-        </button>
-      </header>
-
+    <main className="home-shell">
       <section className="library">
         <div className="library-heading">
           <div>
             <span className="eyebrow">Your writing space</span>
             <h1>Essays</h1>
           </div>
-          <span className="document-total">
-            {count} {count === 1 ? 'document' : 'documents'}
-          </span>
+          <div className="library-actions">
+            <button
+              type="button"
+              className="new-button"
+              onClick={() => void handleCreate()}
+            >
+              New essay <span aria-hidden="true">＋</span>
+            </button>
+          </div>
         </div>
 
         {loadError ? <p className="library-error">{loadError}</p> : null}
@@ -138,83 +105,58 @@ export function LibraryView({
           </button>
         ) : (
           <div className="document-list">
-            {essays.map((essay) => (
-              <div
-                key={essay.id}
-                className="document-row"
-                role="button"
-                tabIndex={0}
-                aria-label={`Open ${displayTitle(essay.title)}`}
-                onClick={() => onOpen(essay.id)}
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter' || event.key === ' ') {
-                    event.preventDefault();
-                    onOpen(essay.id);
-                  }
-                }}
-                onContextMenu={(event) => {
-                  event.preventDefault();
-                  setMenu({ id: essay.id, x: event.clientX, y: event.clientY });
-                }}
-              >
-                <span className="document-glyph" aria-hidden="true">
-                  <i />
-                  <i />
-                  <i />
-                </span>
-                <span className="document-info">
-                  <strong>{displayTitle(essay.title)}</strong>
-                  <span>{previewLabel(essay.wordCount)}</span>
-                </span>
-                <time dateTime={new Date(essay.updatedAt).toISOString()}>
-                  {formatUpdatedAt(essay.updatedAt)}
-                </time>
-                <span className="row-arrow" aria-hidden="true">
-                  →
-                </span>
-                <button
-                  type="button"
-                  className="row-menu"
-                  aria-label={`More options for ${displayTitle(essay.title)}`}
-                  onClick={(event) => openMenuFromButton(event, essay.id)}
-                >
-                  ⋯
-                </button>
-              </div>
-            ))}
+            {essays.map((essay) => {
+              const title = displayTitle(essay.title);
+              return (
+                <div className="document-item" key={essay.id}>
+                  <button
+                    type="button"
+                    className="document-row"
+                    onClick={() => onOpen(essay.id)}
+                  >
+                    <span className="document-glyph" aria-hidden="true">
+                      <i />
+                      <i />
+                      <i />
+                    </span>
+                    <span className="document-info">
+                      <strong>{title}</strong>
+                      <span>{previewLabel(essay.wordCount)}</span>
+                    </span>
+                    <time dateTime={new Date(essay.updatedAt).toISOString()}>
+                      {formatUpdatedAt(essay.updatedAt)}
+                    </time>
+                  </button>
+                  <div className="document-actions" aria-label={`Actions for ${title}`}>
+                    <button
+                      type="button"
+                      aria-label={`Edit ${title}`}
+                      onClick={() => onOpen(essay.id)}
+                    >
+                      <svg viewBox="0 0 20 20" aria-hidden="true">
+                        <path d="M4 14.8V17h2.2L15 8.2 11.8 5 3 13.8Z" />
+                        <path d="m13 3.8 3.2 3.2" />
+                      </svg>
+                    </button>
+                    <button
+                      type="button"
+                      className="delete-action"
+                      aria-label={`Delete ${title}`}
+                      onClick={() => void handleDelete(essay)}
+                      disabled={deletingId === essay.id}
+                    >
+                      <svg viewBox="0 0 20 20" aria-hidden="true">
+                        <path d="M4.5 6.5h11M8 3.5h4l1 3H7l1-3Z" />
+                        <path d="m6 6.5.7 10h6.6l.7-10M8.5 9v4.5M11.5 9v4.5" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
       </section>
-
-      {menu ? (
-        <div
-          className="context-menu"
-          style={{ left: menu.x, top: menu.y }}
-          onPointerDown={(event) => event.stopPropagation()}
-        >
-          <button
-            type="button"
-            onClick={() => {
-              const target = essays?.find((essay) => essay.id === menu.id) ?? null;
-              setMenu(null);
-              setPendingDelete(target);
-            }}
-          >
-            Delete
-          </button>
-        </div>
-      ) : null}
-
-      {pendingDelete ? (
-        <ConfirmDialog
-          title="Delete essay?"
-          message={`“${displayTitle(pendingDelete.title)}” will be removed from this Mac. This cannot be undone.`}
-          confirmLabel="Delete"
-          busy={deleting}
-          onCancel={() => setPendingDelete(null)}
-          onConfirm={() => void confirmDelete()}
-        />
-      ) : null}
-    </div>
+    </main>
   );
 }

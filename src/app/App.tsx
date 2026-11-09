@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { UNTITLED_TITLE } from '../domain/essay';
 import type { EssayRepository } from '../domain/repository';
 import { createEssayRepository } from '../infra/storage';
 import { LibraryView } from '../features/library/LibraryView';
@@ -12,6 +13,7 @@ export default function App() {
   const [initializationError, setInitializationError] = useState<string | null>(null);
   const [view, setView] = useState<View>({ kind: 'library' });
   const [libraryRevision, setLibraryRevision] = useState(0);
+  const [focusEditor, setFocusEditor] = useState(false);
 
   useEffect(() => {
     let alive = true;
@@ -37,16 +39,19 @@ export default function App() {
     if (!repository) {
       return;
     }
-    const essay = await repository.create();
+    const essay = await repository.create({ title: UNTITLED_TITLE });
     setLibraryRevision((revision) => revision + 1);
+    setFocusEditor(true);
     setView({ kind: 'editor', id: essay.id });
   }, [repository]);
 
   const openEssay = useCallback((id: string) => {
+    setFocusEditor(false);
     setView({ kind: 'editor', id });
   }, []);
 
   const closeEditor = useCallback(() => {
+    setFocusEditor(false);
     setView({ kind: 'library' });
     setLibraryRevision((revision) => revision + 1);
   }, []);
@@ -95,7 +100,13 @@ export default function App() {
 
   if (view.kind === 'editor') {
     return (
-      <EditorView key={view.id} repository={repository} essayId={view.id} onBack={closeEditor} />
+      <EditorView
+        key={view.id}
+        repository={repository}
+        essayId={view.id}
+        autoFocus={focusEditor}
+        onBack={closeEditor}
+      />
     );
   }
 

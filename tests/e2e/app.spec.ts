@@ -70,13 +70,18 @@ test('creates an essay, autosaves, survives reload, and exports both formats', a
   await expect(page.locator('.essay-body')).toContainText('Bold thought');
 });
 
-test('uses the Plain wordmark in the library and editor', async ({ page }) => {
-  await expect(page.locator('.home-nav .wordmark')).toHaveText('Plain');
+test('uses the latest library and editor chrome without a wordmark', async ({ page }) => {
+  await expect(page.locator('.home-nav')).toHaveCount(0);
+  await expect(page.locator('.wordmark')).toHaveCount(0);
   await page.getByRole('button', { name: 'New essay', exact: true }).click();
-  await expect(page.locator('.toolbar .wordmark')).toHaveText('Plain');
+  await expect(page.locator('.essay-body')).toBeFocused();
+  await expect(page.getByLabel('Essay title')).toHaveValue('Untitled Essay');
+  await expect(page.locator('.document-toolbar-title')).toHaveText('Untitled Essay');
+  await page.getByLabel('Essay title').fill('Chrome check');
+  await expect(page.locator('.document-toolbar-title')).toHaveText('Chrome check');
 });
 
-test('exports docx with selected typeface, spacing, paper size, indent, and clean quotes', async ({
+test('exports docx with the fixed Make typeface and spacing, selected paper size, indent, and clean quotes', async ({
   page,
 }) => {
   await page.getByRole('button', { name: 'New essay', exact: true }).click();
@@ -86,8 +91,10 @@ test('exports docx with selected typeface, spacing, paper size, indent, and clea
 
   await page.getByRole('button', { name: 'Export .docx' }).click();
   const dialog = page.getByRole('dialog', { name: 'Export document' });
-  await dialog.getByLabel('Export typeface').selectOption('arial');
-  await dialog.getByLabel('Export line spacing').selectOption('single');
+  await expect(dialog.getByLabel('Export typeface')).toBeDisabled();
+  await expect(dialog.getByLabel('Export typeface')).toHaveValue('times');
+  await expect(dialog.getByLabel('Export line spacing')).toBeDisabled();
+  await expect(dialog.getByLabel('Export line spacing')).toHaveValue('double');
   await dialog.getByLabel('Export paper size').selectOption('a4');
 
   const downloadPromise = page.waitForEvent('download');
@@ -98,8 +105,8 @@ test('exports docx with selected typeface, spacing, paper size, indent, and clea
   const zip = await JSZip.loadAsync(await readFile(path!));
   const xml = await zip.file('word/document.xml')!.async('string');
 
-  expect(xml).toContain('w:ascii="Arial"');
-  expect(xml).toContain('w:line="240"');
+  expect(xml).toContain('w:ascii="Times New Roman"');
+  expect(xml).toContain('w:line="480"');
   expect(xml).toContain('w:pgSz w:w="11907" w:h="16839"');
   expect(xml).toContain('<w:ind w:firstLine="720"/>');
   expect(xml).toContain('She said, “it’s fine.”');
@@ -107,6 +114,7 @@ test('exports docx with selected typeface, spacing, paper size, indent, and clea
 
 test('uses the Untitled Essay fallback for a blank title', async ({ page }) => {
   await page.getByRole('button', { name: 'New essay', exact: true }).click();
+  await page.getByLabel('Essay title').fill('');
   await page.locator('.essay-body').click();
   await page.keyboard.type('A few words without a title.');
   await expect(page.locator('.save-status')).toHaveText('Saved');
@@ -117,18 +125,15 @@ test('uses the Untitled Essay fallback for a blank title', async ({ page }) => {
   await expect(page.locator('.document-row strong')).toHaveText('Untitled Essay');
 });
 
-test('deletes an essay from the row menu after confirmation', async ({ page }) => {
+test('deletes an essay from the row action after confirmation', async ({ page }) => {
   await page.getByRole('button', { name: 'New essay', exact: true }).click();
   await page.getByLabel('Essay title').fill('Temporary thought');
   await page.getByRole('button', { name: 'Back to essays' }).click();
   await expect(page.locator('.document-row')).toHaveCount(1);
 
-  await page.locator('.document-row').hover();
-  await page
-    .getByRole('button', { name: 'More options for Temporary thought', exact: true })
-    .click();
-  await page.getByRole('button', { name: 'Delete', exact: true }).click();
-  await page.getByRole('dialog').getByRole('button', { name: 'Delete', exact: true }).click();
+  await page.locator('.document-item').hover();
+  page.once('dialog', (dialog) => void dialog.accept());
+  await page.getByRole('button', { name: 'Delete Temporary thought', exact: true }).click();
 
   await expect(page.getByText('Start a new essay')).toBeVisible();
   await expect(page.locator('.document-row')).toHaveCount(0);

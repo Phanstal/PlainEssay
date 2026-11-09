@@ -46,9 +46,9 @@ Because every build is ad-hoc signed rather than notarized, you may need to repe
 - **Local images**: paste or drop PNG, JPEG, GIF, or WebP images. They are stored as data URLs inside the essay and never uploaded; drag-over shows a drop outline.
 - **Autosave**: changes save to a local SQLite database after a short debounce, with a visible `Saving…` / `Saved` state.
 - **Markdown export**: valid CommonMark. Bold, italic, and paragraphs are converted by Turndown; underline is kept as `<u>` because CommonMark has no underline syntax; local images become Markdown image links. Straight quotes and apostrophes are converted to clean typographic quotes.
-- **Word export**: `Export .docx` opens export settings for typeface, line spacing, and paper size. The default matches the prototype: centered title, Times New Roman 12 pt, double spacing, US Letter, one-inch margins, 0.5-inch first-line indent, black text. Bold / italic / underline are preserved, local images are embedded, and straight quotes / apostrophes are exported as typographic quotes.
+- **Word export**: `Export .docx` opens the export dialog. The typeface is fixed to Times New Roman 12 pt and the line spacing to double, matching the latest Make prototype; paper size is selectable between US Letter and A4. The document has a centered title, one-inch margins, a 0.5-inch first-line indent, and black text. Bold / italic / underline are preserved, local images are embedded, and straight quotes / apostrophes are exported as typographic quotes.
 - **Native macOS shell**: transparent native title bar with reliable window dragging, real application menus (`File`, `Edit`, `Format`, `View`, `Window`), `⌘N`, `⌘S`, `⌘F`, `⌘B`, `⌘I`, `⌘U`, and window state restoration.
-- **Delete**: right-click an essay row, or use the `⋯` button, then confirm.
+- **Delete**: hover an essay row, use the trash action, then confirm in the native dialog.
 - **Local only**: the database never leaves the Mac.
 
 ## Your data

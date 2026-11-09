@@ -19,21 +19,23 @@ import { FindBar } from './FindBar';
 interface EditorViewProps {
   repository: EssayRepository;
   essayId: string;
+  autoFocus?: boolean;
   onBack: () => void;
 }
 
 interface EssayEditorProps {
   repository: EssayRepository;
   initial: Essay;
+  autoFocus?: boolean;
   onBack: () => void;
 }
 
 type SaveState = 'saved' | 'saving' | 'error';
 type ExportFormat = 'markdown' | 'docx';
 
-const SAVE_DEBOUNCE_MS = 600;
+const SAVE_DEBOUNCE_MS = 700;
 
-export function EditorView({ repository, essayId, onBack }: EditorViewProps) {
+export function EditorView({ repository, essayId, autoFocus, onBack }: EditorViewProps) {
   const [essay, setEssay] = useState<Essay | null | undefined>(undefined);
   const [loadError, setLoadError] = useState<string | null>(null);
 
@@ -90,10 +92,10 @@ export function EditorView({ repository, essayId, onBack }: EditorViewProps) {
     );
   }
 
-  return <EssayEditor repository={repository} initial={essay} onBack={onBack} />;
+  return <EssayEditor repository={repository} initial={essay} autoFocus={autoFocus} onBack={onBack} />;
 }
 
-function EssayEditor({ repository, initial, onBack }: EssayEditorProps) {
+function EssayEditor({ repository, initial, autoFocus, onBack }: EssayEditorProps) {
   const sanitizedHtml = sanitizeEssayHtml(initial.contentHtml);
   const [title, setTitle] = useState(initial.title);
   const [wordCount, setWordCount] = useState(initial.wordCount);
@@ -106,7 +108,6 @@ function EssayEditor({ repository, initial, onBack }: EssayEditorProps) {
   );
   const [findOpen, setFindOpen] = useState(false);
   const [selectionCount, setSelectionCount] = useState(0);
-  const [historyState, setHistoryState] = useState({ canUndo: false, canRedo: false });
   const [dragActive, setDragActive] = useState(false);
   const editorRef = useRef<Editor | null>(null);
   const insertImageFilesRef = useRef<(files: File[]) => void>(() => undefined);
@@ -251,6 +252,16 @@ function EssayEditor({ repository, initial, onBack }: EssayEditorProps) {
     },
   });
 
+  useEffect(() => {
+    if (!autoFocus || !editor) {
+      return;
+    }
+    const frame = window.requestAnimationFrame(() => {
+      editor.commands.focus('start');
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [autoFocus, editor]);
+
   const insertImageFiles = useCallback(
     async (files: File[]) => {
       for (const file of files) {
@@ -274,26 +285,11 @@ function EssayEditor({ repository, initial, onBack }: EssayEditorProps) {
     insertImageFilesRef.current = (files) => void insertImageFiles(files);
   }, [insertImageFiles]);
 
-  const [activeFormats, setActiveFormats] = useState({
-    bold: false,
-    italic: false,
-    underline: false,
-  });
-
   useEffect(() => {
     if (!editor) {
       return;
     }
     const update = () => {
-      setActiveFormats({
-        bold: editor.isActive('bold'),
-        italic: editor.isActive('italic'),
-        underline: editor.isActive('underline'),
-      });
-      setHistoryState({
-        canUndo: editor.can().undo(),
-        canRedo: editor.can().redo(),
-      });
       const { from, to } = editor.state.selection;
       setSelectionCount(from === to ? 0 : countWords(editor.state.doc.textBetween(from, to, ' ')));
     };
@@ -434,7 +430,7 @@ function EssayEditor({ repository, initial, onBack }: EssayEditorProps) {
   }, [saveNow]);
 
   const statusLabel =
-    saveState === 'saved' ? 'Saved' : saveState === 'saving' ? 'Saving…' : 'Save failed';
+    saveState === 'saved' ? 'Saved' : saveState === 'saving' ? 'Saving…' : 'Couldn’t save';
 
   return (
     <div className="app-shell">
@@ -448,9 +444,9 @@ function EssayEditor({ repository, initial, onBack }: EssayEditorProps) {
           >
             ←
           </button>
-          <span className="wordmark">Plain</span>
-          <span className={`save-status save-status-${saveState}`} aria-live="polite">
-            <span className={`status-dot ${saveState}`} />
+          <span className="document-toolbar-title">{title || 'Untitled Essay'}</span>
+          <span className="save-status" aria-live="polite">
+            <span className={saveState === 'saved' ? 'status-dot' : 'status-dot saving'} />
             {statusLabel}
           </span>
         </div>
@@ -493,40 +489,37 @@ function EssayEditor({ repository, initial, onBack }: EssayEditorProps) {
           <input
             className="essay-title"
             aria-label="Essay title"
-            placeholder="Untitled Essay"
             value={title}
             maxLength={160}
             onChange={(event) => handleTitleChange(event.target.value)}
-            spellCheck={false}
           />
-          <div className="title-rule" aria-hidden="true" />
-
           <div className="formatting-toolbar" role="toolbar" aria-label="Formatting">
             <button
               type="button"
               className="format-button"
               aria-label="Undo"
-              disabled={!historyState.canUndo}
-              onMouseDown={(event) => event.preventDefault()}
               onClick={undo}
             >
-              ↶
+              <svg viewBox="0 0 20 20" aria-hidden="true">
+                <path d="M7 5H3.5V1.5" />
+                <path d="M3.8 5A7 7 0 1 1 4 12" />
+              </svg>
             </button>
             <button
               type="button"
               className="format-button"
               aria-label="Redo"
-              disabled={!historyState.canRedo}
-              onMouseDown={(event) => event.preventDefault()}
               onClick={redo}
             >
-              ↷
+              <svg viewBox="0 0 20 20" aria-hidden="true">
+                <path d="M13 5h3.5V1.5" />
+                <path d="M16.2 5A7 7 0 1 0 16 12" />
+              </svg>
             </button>
             <button
               type="button"
-              className={`format-button ${activeFormats.bold ? 'active' : ''}`}
+              className="format-button format-bold"
               aria-label="Bold"
-              aria-pressed={activeFormats.bold}
               onMouseDown={(event) => event.preventDefault()}
               onClick={() => applyFormat('bold')}
             >
@@ -534,9 +527,8 @@ function EssayEditor({ repository, initial, onBack }: EssayEditorProps) {
             </button>
             <button
               type="button"
-              className={`format-button format-italic ${activeFormats.italic ? 'active' : ''}`}
+              className="format-button format-italic"
               aria-label="Italic"
-              aria-pressed={activeFormats.italic}
               onMouseDown={(event) => event.preventDefault()}
               onClick={() => applyFormat('italic')}
             >
@@ -544,9 +536,8 @@ function EssayEditor({ repository, initial, onBack }: EssayEditorProps) {
             </button>
             <button
               type="button"
-              className={`format-button format-underline ${activeFormats.underline ? 'active' : ''}`}
+              className="format-button format-underline"
               aria-label="Underline"
-              aria-pressed={activeFormats.underline}
               onMouseDown={(event) => event.preventDefault()}
               onClick={() => applyFormat('underline')}
             >
@@ -582,8 +573,8 @@ function EssayEditor({ repository, initial, onBack }: EssayEditorProps) {
       {exportDialogOpen ? (
         <ExportDialog
           value={exportOptions}
-          busy={exporting}
           onChange={setExportOptions}
+          busy={exporting}
           onCancel={closeDocxExport}
           onExport={exportDocxWithSettings}
         />
