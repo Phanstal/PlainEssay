@@ -14,14 +14,14 @@ Built with Tauri 2, React, TypeScript, TipTap, and SQLite. No accounts, no cloud
 
 Download the latest universal build for macOS 12 or newer (Apple Silicon and Intel) from [Releases](https://github.com/Phanstal/PlainEssay/releases/latest):
 
-- `Plain_0.1.6_universal.dmg`
-- `Plain_0.1.6_universal.zip`
+- `Plain_0.1.7_universal.dmg`
+- `Plain_0.1.7_universal.zip`
 - `SHA256SUMS.txt`
 
 Verify the download before opening it:
 
 ```sh
-shasum -a 256 -c Plain_0.1.6_universal.dmg.sha256
+shasum -a 256 -c Plain_0.1.7_universal.dmg.sha256
 ```
 
 ### First launch
@@ -105,7 +105,7 @@ The CI workflow runs lint, typecheck, unit tests, production build, and Playwrig
 
 ## Releasing
 
-Push a tag such as `v0.1.6`. [`.github/workflows/macos.yml`](.github/workflows/macos.yml) builds a universal `Plain.app` on `macos-15`, ad-hoc signs it, creates the DMG and ZIP, writes SHA-256 checksums, and publishes a GitHub Release. There is no Apple signing identity or notarization in this project, so the Gatekeeper instructions above apply to every release.
+Push a tag such as `v0.1.7`. [`.github/workflows/macos.yml`](.github/workflows/macos.yml) builds a universal `Plain.app` on `macos-15`, ad-hoc signs it, creates the DMG and ZIP, writes SHA-256 checksums, and publishes a GitHub Release. There is no Apple signing identity or notarization in this project, so the Gatekeeper instructions above apply to every release.
 
 ## Architecture
 
