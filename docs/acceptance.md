@@ -1,6 +1,6 @@
 # Plain 验收清单（v0.1.6）
 
-> **历史清单。** 本清单对应 v0.1.6（Make Version 12）。当前源码已按 Make Version 24（2026-11-09 10:56 AM）调整：文档库移除顶部导航、字标和文档数，编辑页移除字标与标题分隔线，行操作与导出弹窗改为最新交互。当前 UI 契约见 [`docs/design/README.md`](design/README.md)；待下一次发版时再据此重生成验收清单。
+> **历史清单。** 本清单对应 v0.1.6（Make Version 12）。当前源码已按 Make Version 27（4:33 PM「Support multiline essay titles」）调整：文档库移除顶部导航、字标和文档数；编辑页移除字标与标题分隔线；支持多行标题；打开已有文档时光标在正文末尾；Word 导出字体与行距可选并增加首次导出提醒。当前 UI 契约见 [`docs/design/README.md`](design/README.md)；待下一次发版时再据此重生成验收清单。
 
 ## 0. 构建信息
 

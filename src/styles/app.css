@@ -35,7 +35,8 @@ body {
 
 button,
 input,
-select {
+select,
+textarea {
   font: inherit;
 }
 
@@ -263,6 +264,7 @@ button:disabled {
 }
 
 .essay-title {
+  resize: none;
   width: 100%;
   color: var(--neutral-dark);
   font-family: var(--interface-font);
@@ -276,6 +278,7 @@ button:disabled {
   line-height: 1.18;
   display: block;
   padding: 0;
+  overflow: hidden;
 }
 
 .essay-title::placeholder {
@@ -893,6 +896,38 @@ button:disabled {
 
 .dialog-export {
   min-width: 7.4rem;
+}
+
+.export-warning-overlay {
+  z-index: 31;
+}
+
+.export-warning {
+  width: min(100%, 30rem);
+}
+
+.export-warning > p {
+  color: #657177;
+  margin: 0;
+  font-size: 0.76rem;
+  line-height: 1.65;
+}
+
+.warning-check {
+  color: #59666c;
+  cursor: pointer;
+  align-items: center;
+  gap: 0.55rem;
+  margin-top: 1.2rem;
+  font-size: 0.72rem;
+  display: flex;
+}
+
+.warning-check input {
+  width: 1rem;
+  height: 1rem;
+  accent-color: var(--primary-strong);
+  margin: 0;
 }
 
 html.tauri .toolbar {

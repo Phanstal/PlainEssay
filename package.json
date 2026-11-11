@@ -1,7 +1,7 @@
 {
   "name": "plainessay",
   "private": true,
-  "version": "0.1.7",
+  "version": "0.1.8",
   "type": "module",
   "description": "A quiet space for focused essay writing.",
   "scripts": {

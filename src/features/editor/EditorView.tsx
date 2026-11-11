@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { EditorContent, useEditor, type Editor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import ImageExtension from '@tiptap/extension-image';
@@ -19,14 +19,14 @@ import { FindBar } from './FindBar';
 interface EditorViewProps {
   repository: EssayRepository;
   essayId: string;
-  autoFocus?: boolean;
+  autoFocus?: 'start' | 'end';
   onBack: () => void;
 }
 
 interface EssayEditorProps {
   repository: EssayRepository;
   initial: Essay;
-  autoFocus?: boolean;
+  autoFocus?: 'start' | 'end';
   onBack: () => void;
 }
 
@@ -110,6 +110,7 @@ function EssayEditor({ repository, initial, autoFocus, onBack }: EssayEditorProp
   const [selectionCount, setSelectionCount] = useState(0);
   const [dragActive, setDragActive] = useState(false);
   const editorRef = useRef<Editor | null>(null);
+  const titleRef = useRef<HTMLTextAreaElement | null>(null);
   const insertImageFilesRef = useRef<(files: File[]) => void>(() => undefined);
 
   const latestRef = useRef({
@@ -257,10 +258,19 @@ function EssayEditor({ repository, initial, autoFocus, onBack }: EssayEditorProp
       return;
     }
     const frame = window.requestAnimationFrame(() => {
-      editor.commands.focus('start');
+      editor.commands.focus(autoFocus);
     });
     return () => window.cancelAnimationFrame(frame);
   }, [autoFocus, editor]);
+
+  useLayoutEffect(() => {
+    const element = titleRef.current;
+    if (!element) {
+      return;
+    }
+    element.style.height = 'auto';
+    element.style.height = `${element.scrollHeight}px`;
+  }, [title]);
 
   const insertImageFiles = useCallback(
     async (files: File[]) => {
@@ -486,10 +496,12 @@ function EssayEditor({ repository, initial, autoFocus, onBack }: EssayEditorProp
 
       <div className="writing-stage">
         <div className="paper">
-          <input
+          <textarea
+            ref={titleRef}
             className="essay-title"
             aria-label="Essay title"
             value={title}
+            rows={1}
             maxLength={160}
             onChange={(event) => handleTitleChange(event.target.value)}
           />

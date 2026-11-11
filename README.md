@@ -14,14 +14,14 @@ Built with Tauri 2, React, TypeScript, TipTap, and SQLite. No accounts, no cloud
 
 Download the latest universal build for macOS 12 or newer (Apple Silicon and Intel) from [Releases](https://github.com/Phanstal/PlainEssay/releases/latest):
 
-- `Plain_0.1.7_universal.dmg`
-- `Plain_0.1.7_universal.zip`
+- `Plain_0.1.8_universal.dmg`
+- `Plain_0.1.8_universal.zip`
 - `SHA256SUMS.txt`
 
 Verify the download before opening it:
 
 ```sh
-shasum -a 256 -c Plain_0.1.7_universal.dmg.sha256
+shasum -a 256 -c Plain_0.1.8_universal.dmg.sha256
 ```
 
 ### First launch
@@ -46,7 +46,7 @@ Because every build is ad-hoc signed rather than notarized, you may need to repe
 - **Local images**: paste or drop PNG, JPEG, GIF, or WebP images. They are stored as data URLs inside the essay and never uploaded; drag-over shows a drop outline.
 - **Autosave**: changes save to a local SQLite database after a short debounce, with a visible `Saving…` / `Saved` state.
 - **Markdown export**: valid CommonMark. Bold, italic, and paragraphs are converted by Turndown; underline is kept as `<u>` because CommonMark has no underline syntax; local images become Markdown image links. Straight quotes and apostrophes are converted to clean typographic quotes.
-- **Word export**: `Export .docx` opens the export dialog. The typeface is fixed to Times New Roman 12 pt and the line spacing to double, matching the latest Make prototype; paper size is selectable between US Letter and A4. The document has a centered title, one-inch margins, a 0.5-inch first-line indent, and black text. Bold / italic / underline are preserved, local images are embedded, and straight quotes / apostrophes are exported as typographic quotes.
+- **Word export**: `Export .docx` opens the export dialog. Typeface (Times New Roman or Arial), line spacing (double or single), and paper size (US Letter or A4) are selectable. The first export shows a short “Review in Word before submitting” notice, with an option to hide it in the future. The document has a centered title, one-inch margins, a 0.5-inch first-line indent, and black text. Bold / italic / underline are preserved, local images are embedded, and straight quotes / apostrophes are exported as typographic quotes.
 - **Native macOS shell**: transparent native title bar with reliable window dragging, real application menus (`File`, `Edit`, `Format`, `View`, `Window`), `⌘N`, `⌘S`, `⌘F`, `⌘B`, `⌘I`, `⌘U`, and window state restoration.
 - **Delete**: hover an essay row, use the trash action, then confirm in the native dialog.
 - **Local only**: the database never leaves the Mac.
@@ -105,7 +105,7 @@ The CI workflow runs lint, typecheck, unit tests, production build, and Playwrig
 
 ## Releasing
 
-Push a tag such as `v0.1.7`. [`.github/workflows/macos.yml`](.github/workflows/macos.yml) builds a universal `Plain.app` on `macos-15`, ad-hoc signs it, creates the DMG and ZIP, writes SHA-256 checksums, and publishes a GitHub Release. There is no Apple signing identity or notarization in this project, so the Gatekeeper instructions above apply to every release.
+Push a tag such as `v0.1.8`. [`.github/workflows/macos.yml`](.github/workflows/macos.yml) builds a universal `Plain.app` on `macos-15`, ad-hoc signs it, creates the DMG and ZIP, writes SHA-256 checksums, and publishes a GitHub Release. There is no Apple signing identity or notarization in this project, so the Gatekeeper instructions above apply to every release.
 
 ## Architecture
 
@@ -137,6 +137,6 @@ Plain has no network code, no analytics, no account system, and no synchronizati
 
 ## Design
 
-The interface is based on the [PlainEssay Figma Make prototype](https://www.figma.com/make/qn6Dlo2r2frD52bPjC1hal/PlainEssay-Writing-App). Figma Make files are not supported by the Figma MCP server, so the latest Version 12 preview was read directly from its cached preview iframe and the CSS, markup, and reference screenshots were frozen into [docs/design](docs/design) as the visual contract. See [docs/design/README.md](docs/design/README.md) for tokens and intentional deviations.
+The interface is based on the [PlainEssay Figma Make prototype](https://www.figma.com/make/qn6Dlo2r2frD52bPjC1hal/PlainEssay-Writing-App). Figma Make files are not supported by the Figma MCP server, so the latest Version 27 preview was read directly from its cached preview iframe and the CSS, markup, and reference screenshots were frozen into [docs/design](docs/design) as the visual contract. See [docs/design/README.md](docs/design/README.md) for tokens and intentional deviations.
 
 The repository name, bundle identifier, and database filename still say `plainessay`; they are internal identifiers kept for continuity. The product and app name are `Plain`.

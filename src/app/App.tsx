@@ -13,7 +13,7 @@ export default function App() {
   const [initializationError, setInitializationError] = useState<string | null>(null);
   const [view, setView] = useState<View>({ kind: 'library' });
   const [libraryRevision, setLibraryRevision] = useState(0);
-  const [focusEditor, setFocusEditor] = useState(false);
+  const [focusCaret, setFocusCaret] = useState<'start' | 'end' | null>(null);
 
   useEffect(() => {
     let alive = true;
@@ -41,17 +41,17 @@ export default function App() {
     }
     const essay = await repository.create({ title: UNTITLED_TITLE });
     setLibraryRevision((revision) => revision + 1);
-    setFocusEditor(true);
+    setFocusCaret('start');
     setView({ kind: 'editor', id: essay.id });
   }, [repository]);
 
   const openEssay = useCallback((id: string) => {
-    setFocusEditor(false);
+    setFocusCaret('end');
     setView({ kind: 'editor', id });
   }, []);
 
   const closeEditor = useCallback(() => {
-    setFocusEditor(false);
+    setFocusCaret(null);
     setView({ kind: 'library' });
     setLibraryRevision((revision) => revision + 1);
   }, []);
@@ -104,7 +104,7 @@ export default function App() {
         key={view.id}
         repository={repository}
         essayId={view.id}
-        autoFocus={focusEditor}
+        autoFocus={focusCaret ?? undefined}
         onBack={closeEditor}
       />
     );
