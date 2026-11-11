@@ -209,18 +209,17 @@ test('reopens an existing essay with the caret at the end', async ({ page }) => 
     const selection = window.getSelection();
     const body = document.querySelector('.essay-body');
     if (!selection || !body || selection.rangeCount === 0) {
-      return { relation: -2, collapsed: false };
+      return { tail: 'missing', collapsed: false };
     }
-    const end = document.createRange();
-    end.selectNodeContents(body);
-    end.collapse(false);
+    const range = selection.getRangeAt(0).cloneRange();
+    range.setEnd(body, body.childNodes.length);
     return {
-      relation: selection.getRangeAt(0).compareBoundaryPoints(Range.START_TO_START, end),
+      tail: range.toString(),
       collapsed: selection.isCollapsed,
     };
   });
   expect(caret.collapsed).toBe(true);
-  expect(caret.relation).toBe(0);
+  expect(caret.tail).toBe('');
 });
 
 test('deletes an essay from the row action after confirmation', async ({ page }) => {
